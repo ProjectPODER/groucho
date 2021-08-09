@@ -11,16 +11,9 @@ const {
     checkUrlFieldFlag,
     dateDifferenceFlag
 } = require('./redFlags/redFlags');
-const launder = require('company-laundry');
-const removeDiacritics = require('diacritics').remove;
+const laundry = require('company-laundry');
 const _ = require('lodash');
 const accumulativeAverage = require('./utils.js');
-
-function simpleName(string) {
-  return removeDiacritics(string)
-    .replace(/[,.]/g, '') // remove commas and periods
-    .toLowerCase();
-}
 
 function getContractYear(contract) {
     let startDate = '';
@@ -107,7 +100,7 @@ function getContractsFromRecord(record) {
                 case 'contracts':
                     computed_contract.contracts = [ contract ];
                     break;
-                case 'dataSource':
+                case 'source':
                 case 'total_amount':
                     // Ignore these properties if present, not part of OCDS
                     break;
@@ -170,20 +163,20 @@ function evaluateFlags(record, flags, flagCollectionObj) {
                 switch(party.govLevel) {
                     case 'region':
                         var stateObj = {
-                            id: simpleName(launder(party.address.region)),
+                            id: laundry.simpleName(laundry.launder(party.address.region)),
                             entity: 'state'
                         }
                         contratoParties.push(stateObj);
                         break;
                     case 'city':
                         var cityObj = {
-                            id: simpleName(launder(party.address.locality)),
-                            parent: { id: simpleName(launder(party.address.region)) },
+                            id: laundry.simpleName(laundry.launder(party.address.locality)),
+                            parent: { id: laundry.simpleName(laundry.launder(party.address.region)) },
                             entity: 'municipality'
                         }
                         contratoParties.push(cityObj);
                         var cityStateObj = {
-                            id: simpleName(launder(party.address.region)),
+                            id: laundry.simpleName(laundry.launder(party.address.region)),
                             entity: 'state'
                         }
                         contratoParties.push(cityStateObj);
