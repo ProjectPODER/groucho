@@ -1,6 +1,6 @@
 {
-  "name": "ocds-redflags",
-  "version": "1.0.0",
+  "name": "groucho",
+  "version": "0.1.0",
   "description": "Evaluador de documentos OCDS con banderas configurables.",
   "main": "index.js",
   "scripts": {
@@ -8,16 +8,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git@gitlab.rindecuentas.org:2203/equipo-qqw/ocds-redflags.git"
+    "url": "ssh://git@gitlab.rindecuentas.org:2203/equipo-qqw/groucho.git"
   },
-  "author": "",
+  "author": "PODER",
   "license": "ISC",
   "dependencies": {
     "command-line-args": "^5.0.2",
     "company-laundry": "git+https://git@github.com/kyv/lavanderia.git",
     "csv-string": "^3.1.6",
     "diacritics": "^1.3.0",
+    "event-stream": "^4.0.1",
     "fs": "0.0.1-security",
+    "JSONStream": "^1.3.5",
     "lodash": "^4.17.15",
     "monk": "^6.0.6",
     "object-hash": "^1.3.1",
