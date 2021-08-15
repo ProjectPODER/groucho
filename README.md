@@ -1,9 +1,7 @@
-# ocds-redflags
+# groucho
 Evaluador de documentos OCDS con banderas configurables.
 
-Esta es la version que se utilizó para el lanzamiento de https://www.todosloscontratos.mx [(commit 5e2fb7bbc29814d5f2ddb935ddf0138cc92ae2ce)](https://github.com/ProjectPODER/OCDS_RedFlags/commit/5e2fb7bbc29814d5f2ddb935ddf0138cc92ae2ce)
-
-La documentación de banderas nodo aún no está completa. Si fuera de interés, se hará una nueva versión con mejor documentación y comentarios.
+![GROUCHO_MARX!](https://media.giphy.com/media/26tnoy9IN4bouDHEY/giphy.gif)
 
 #### Modo de uso
 ##### Instalación
