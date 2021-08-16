@@ -26,23 +26,22 @@
             "name": "Campos completos Costaricenses (falta definir campos)",
             "type": "check-fields-rate",
             "fields": [
-                "awards.date", "awards.value.currency", "awards.value.amount", "awards.suppliers.id", "awards.suppliers.name",
-                "buyer.id", "buyer.name", "buyer.consolidatedProcessMxCnet",
-                "contracts.amendments.id", "contracts.date", "contracts.id", "contracts.awardID", "contracts.filedMxCnet", "contracts.framework", "contracts.hasFramework",
-                    "contracts.period.startDate", "contracts.period.endDate", "contracts.period.multiyearContractMxCnet",
-                    "contracts.tenderPeriod.endDate", "contracts.tenderPeriod.startDate", "contracts.status", "contracts.statusMxCnet", "contracts.title",
+               "awards.id",
+                "buyer.id", "buyer.name",
+                "contracts.amendments.id", "contracts.dateSigned", "contracts.id", "contracts.awardID",
+                    "contracts.period.startDate", "contracts.period.endDate",
+                    "contracts.status", "contracts.title",
                     "contracts.value.currency", "contracts.value.amount",
-                "id", "ocid",
-                "parties.address.countryName", "parties.address.region", "parties.contactPoint.name", "parties.govLevel", "parties.id", "parties.identifier.id",
-                    "parties.identifier.legalName", "parties.memberOf", "parties.memberOf.id",
-                    "parties.memberOf.name", "parties.name", "parties.role", "parties.details.scaleReportedByBuyerMxCnet", "parties.details.scaleReportedBySupplierMxCnet",
-                "planning.budget.budgetBreakdown.amount.amount", "planning.budget.budgetBreakdown.amount.currency", "planning.budget.budgetBreakdown.budgetClassifications.origin",
-                    "planning.budget.project", "planning.budget.projectID",
+                "id", "ocid", "initiationType",
+                "parties.address.countryName", "parties.address.locality", "parties.address.streetAddress", "parties.address.countryName", 
+                    "parties.address.region", "parties.govLevel",
+                    "parties.id", "parties.identifier.id",
+                    "parties.identifier.legalName",
+                    "parties.name", "parties.role", "parties.details.scaleReportedBySupplierMxCnet",
+                "planning.budget.amount.amount", "planning.budget.amount.currency",
                 "source", "tag",
-                "tender.additionalProcurementCategories", "tender.id", "tender.mainProcurementCategory", "tender.procurementMethod", "tender.procurementMethodDetails",
-                    "tender.procurementMethodCharacterMxCnet",
-                    "tender.procurementMethodMxCnet", "tender.procurementMethodDetailsTemplateMxCnet", "tender.procuringEntity", "tender.procuringEntity.id",
-                    "tender.procuringEntity.name", "tender.submissionMethod", "tender.title", "tender.contractPeriod.multiyearContractMxCnet"
+                "tender.procurementMethod", "tender.procurementMethodDetails", "tender.procurementMethodRationale", "tender.mainProcurementCategory", 
+                "tender.value.amount", "tender.value.currency", "tender.id"
             ]
         },
         {
@@ -169,7 +168,7 @@
             "name": "Fecha de firma en el futuro",
             "type": "date-difference-bool",
             "fields": [
-                "contracts.dateSigned",
+                "contracts.dateSigned"
             ]
         },
         {
