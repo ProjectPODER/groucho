@@ -21,7 +21,7 @@
             ]
         },
         {
-            "id": "trans-cccr-beta",
+            "id": "trans-cccr",
             "category": "Transparencia",
             "name": "Campos completos Costaricenses (falta definir campos)",
             "type": "check-fields-rate",
@@ -192,9 +192,9 @@
             ]
         },                
         {
-            "id": "comp-cfc-beta",
+            "id": "comp-cfc",
             "category": "Competitividad",
-            "name": "Campos Fundamentales para la Competitividad (falta definir campos)",
+            "name": "Campos Fundamentales para la Competitividad",
             "type": "check-fields-bool",
             "fields": [
                 {
@@ -286,9 +286,9 @@
             ]
         },
         {
-            "id": "traz-cft-beta",
+            "id": "traz-cft",
             "category": "Trazabilidad",
-            "name": "Campos Fundamentales para la Trazabilidad (falta actualizar los campos)",
+            "name": "Campos Fundamentales para la Trazabilidad",
             "type": "check-fields-bool",
             "fields": [
                 "planning.budget",
@@ -303,7 +303,10 @@
                     "conditions": {
                         "parties.role": "buyer"
                     }
-                }
+                },
+                "parties.identifier.id",
+                "tender.id",
+                "contract.id"                
             ]
         },
         {
