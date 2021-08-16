@@ -203,7 +203,9 @@
                         "parties.roles": "supplier"
                     }
                 },
-                "tender.procurementMethod"
+                "tender.procurementMethod",
+                "planning.budget.amount.amount", "planning.budget.amount.currency",
+                "tender.procurementMethod", "tender.procurementMethodDetails", "tender.procurementMethodRationale", "tender.mainProcurementCategory"
             ]
         },
         {
