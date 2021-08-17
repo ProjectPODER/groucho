@@ -21,11 +21,16 @@ function parseFlags(file) {
     let rawdata = fs.readFileSync(file);
 
     // Parse file
-    let rules = JSON.parse(rawdata);
+    let flags = JSON.parse(rawdata);
+    let contract_rules = flags.contracts;
 
     // Build rulesObj
-    let rulesArr = [];
-    rules.map( (rule) => {
+    let rulesArr = {
+        ruleset_id: flags.ruleset_id,
+        contract_rules: [],
+        party_rules: []
+    };
+    contract_rules.map( (rule) => {
         var ruleObj = {
             id: rule.id,
             name: rule.name,
@@ -38,7 +43,7 @@ function parseFlags(file) {
             difference: getRuleField(rule, 'difference'),   // VALIDAR
         };
 
-        rulesArr.push(ruleObj);
+        rulesArr.contract_rules.push(ruleObj);
     } );
 
     return rulesArr;

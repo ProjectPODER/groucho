@@ -1,4 +1,5 @@
 {
+    "id": "cr-sicop",
     "contracts": [
         {
             "id": "trans-ov",
@@ -33,14 +34,14 @@
                     "contracts.status", "contracts.title",
                     "contracts.value.currency", "contracts.value.amount",
                 "id", "ocid", "initiationType",
-                "parties.address.countryName", "parties.address.locality", "parties.address.streetAddress", "parties.address.countryName", 
+                "parties.address.countryName", "parties.address.locality", "parties.address.streetAddress", "parties.address.countryName",
                     "parties.address.region", "parties.govLevel",
                     "parties.id", "parties.identifier.id",
                     "parties.identifier.legalName",
                     "parties.name", "parties.role", "parties.details.scaleReportedBySupplierMxCnet",
                 "planning.budget.amount.amount", "planning.budget.amount.currency",
                 "source", "tag",
-                "tender.procurementMethod", "tender.procurementMethodDetails", "tender.procurementMethodRationale", "tender.mainProcurementCategory", 
+                "tender.procurementMethod", "tender.procurementMethodDetails", "tender.procurementMethodRationale", "tender.mainProcurementCategory",
                 "tender.value.amount", "tender.value.currency", "tender.id"
             ]
         },
@@ -190,7 +191,7 @@
                 "contracts.dateSigned",
                 "contracts.period.startDate"
             ]
-        },                
+        },
         {
             "id": "comp-cfc",
             "category": "Competitividad",
@@ -306,7 +307,7 @@
                 },
                 "parties.identifier.id",
                 "tender.id",
-                "contract.id"                
+                "contract.id"
             ]
         },
         {
@@ -366,7 +367,7 @@
             ],
             "values":["000000"],
             "type": "check-field-value-bool"
-        },        
+        },
         {
             "id": "traz-ct",
             "category": "Trazabilidad",
@@ -381,56 +382,56 @@
             "fields": ["contracts.amount.value", "planning.budget"],
             "type": "check-url-bool"
         }
-    ],    
+    ],
     "parties": [
         {
             "id": "party-conf",
             "category": "Confiabilidad",
             "name": "CONFIABILIDAD GLOBAL",
             "type": "check-schema-bool"
-        },        
+        },
         {
             "id": "party-conf-year",
             "category": "Confiabilidad",
             "name": "CONFIABILIDAD POR AÑOS",
             "type": "check-schema-bool"
-        },        
+        },
         {
             "id": "party-aepm",
             "category": "Confiabilidad",
             "name": "AGENTE ECONOMICO PREPONDERANTE (MONTO)",
             "type": "check-schema-bool"
-        },        
+        },
         {
             "id": "party-aepc",
             "category": "Confiabilidad",
             "name": "AGENTE ECONOMICO PREPONDERANTE (CANTIDAD)",
             "type": "check-schema-bool"
-        },        
+        },
         {
             "id": "party-trc",
             "category": "Confiabilidad",
             "name": "TITULO DE CONTRATO REPETIDO",
             "type": "check-schema-bool"
-        },        
+        },
         {
             "id": "party-mcr",
             "category": "Confiabilidad",
             "name": "MONTO DE CONTRATO REPETIDO",
             "type": "check-schema-bool"
-        },        
+        },
         {
             "id": "party-celp",
             "category": "Confiabilidad",
             "name": "CONCENTRACION DE EXCEPCIONES A LICITACION PUBLICA",
             "type": "check-schema-bool"
-        },        
+        },
         {
             "id": "party-rla",
             "category": "Confiabilidad",
             "name": "REBASA EL LIMITE ASIGNADO",
             "type": "check-schema-bool"
-        },     
+        },
         {
             "id": "party-ncap",
             "category": "Confiabilidad",
@@ -439,4 +440,3 @@
         }
     ]
 }
-

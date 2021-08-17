@@ -41,9 +41,9 @@ let contractPromises = [];
 let partyPromises = [];
 const chunkSize = 10000;                // How many documents will be sent to DB at once
 const flags = parseFlags(args.flags);   // TODO: Add a syntax check to the flags definition. Should output warnings for rules with errors.
-const flagCollectionObj = createFlagCollectionObject(flags);
+const flagCollectionObj = createFlagCollectionObject(flags.ruleset_id, flags.contract_rules);
 const partyFlagCollection = [];
-const flagCriteriaObj = getCriteriaObject(flags);
+const flagCriteriaObj = getCriteriaObject(flags.contract_rules);
 
 if(args.mode == 'contracts') {
     process.stdin.setEncoding('utf8');
@@ -76,10 +76,6 @@ else {
         const records = db.get(args.collection, { castIds: false });    // Collection to read records from
         const c_flags = db.get('contract_flags', { castIds: false });   // Collection to store contract_flags in
         const p_flags = db.get('party_flags', { castIds: false });      // Collection to store party_flags in
-
-        // Data is not accumulative, clear the collections first to avoid duplicate insertions and errors
-        c_flags.remove({});
-        p_flags.remove({});
 
         console.log('Streaming records...');
 
@@ -279,7 +275,7 @@ function evaluateFromStream(record) {
     else contract = record;
 
     if( isValidContract(contract) ) {
-        evaluations = evaluateFlags(contract, flags, flagCollectionObj); // Perform evaluation of the document
+        evaluations = evaluateFlags(contract, flags.contract_rules, flagCollectionObj); // Perform evaluation of the document
         seenContracts += evaluations.length;
         /*
         evaluations.map( (evaluation) => {
@@ -290,7 +286,7 @@ function evaluateFromStream(record) {
             updateOrgTree(orgTree.roots, evaluation.contract, evaluation.contratoFlags.parties);
         } );
         */
-        contractEval = getContractCriteriaSummary(evaluations, flagCriteriaObj);
+        contractEval = getContractCriteriaSummary(evaluations, flagCriteriaObj, flagCollectionObj.ruleset_id);
     }
     return contractEval;
 }

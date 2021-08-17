@@ -1,7 +1,8 @@
 const hash = require('object-hash');
 
-function createFlagCollectionObject(flags) {
+function createFlagCollectionObject(id, flags) {
     let flagCollObj = {
+        ruleset_id: id,
         id: '',
         name: '',
         type: '', // Values: contract, party
@@ -98,7 +99,7 @@ function updateFlagCollection(party, collection, year, flags) {
     }
 }
 
-function getContractCriteriaSummary(collection, criteriaObj) {
+function getContractCriteriaSummary(collection, criteriaObj, ruleset_id) {
     let summary = [];
     let tempCriteriaObj = JSON.stringify(criteriaObj);
 
@@ -107,6 +108,7 @@ function getContractCriteriaSummary(collection, criteriaObj) {
         let contractFlagObj = {
             id: item.id,
             ocid: item.ocid,
+            ruleset_id: ruleset_id,
             date_signed: item.hasOwnProperty('date_signed')? item.date_signed : null,
             parties: item.parties,
             value: item.value
