@@ -206,7 +206,7 @@ function evaluateFlags(record, flags, flagCollectionObj) {
     return results;
 }
 
-function evaluateNodeFlags(roots, nodeScores,flags) {
+function evaluateNodeFlags(roots, nodeScores, flags) {
     // let nodeScores = {};
 
     for(var rootID in roots) {
@@ -221,7 +221,7 @@ function evaluateNodeFlags(roots, nodeScores,flags) {
                 supplierIDs.push( branch.children[childID].id );
         }
 
-        console.log("supplierIDs",supplierIDs);
+        // console.log("supplierIDs",supplierIDs);
         
         evaluateNode([ucID],nodeScores,flags,supplierIDs, branch);
         if (dependenciaID) {
@@ -249,21 +249,47 @@ function evaluateNode(nodeIDs,nodeScores,flags,supplierIDs,branch) {
         }
         nodeScores[nodeID].num_parties ++
 
+        let branch_years = Object.keys(branch.years);
+        // console.log("evaluateNode",branch_years)
+
         // Iterate flags
         flags.map( (flag) => {
-
-            let branch_years = Object.keys(branch.years);
-            // console.log("evaluateNode",)
-
             branch_years.map(year => {
 
                 let flagScore = getNodeFlagScore(nodeScores, flag, supplierIDs,branch,year);
                 //Add value to party
-                console.log(nodeID,year,flagScore,flag.id);
+                // console.log(nodeID,year,flagScore,flag.id);
                 nodeScores[nodeID].node_rules[flag.id] = accumulativeAverage(nodeScores[nodeID].node_rules[flag.id], nodeScores[nodeID].num_parties, flagScore, nodeScores[nodeID].num_parties);
-    
+
+                // console.log("evaluateNode",nodeScores[nodeID]);
                 //Add value to years
-                nodeScores[nodeID].years[flag.id] = accumulativeAverage(nodeScores[nodeID].years[flag.id], nodeScores[nodeID].num_parties, flagScore, nodeScores[nodeID].num_parties);
+                
+                //Is this year already added to the nodeScores for this node?
+                let yearValue = {}
+                let currentYear = null;
+                nodeScores[nodeID].years.map((yearObj) => {
+                    if (yearObj.year == year) {
+                        currentYear = yearObj;
+                    }
+                });
+
+                if (currentYear) {
+                    if (!currentYear.node_rules) {
+                        currentYear.node_rules = {}
+                    }
+                    currentYear.node_rules[flag.id] = accumulativeAverage(currentYear.node_rules[flag.id], nodeScores[nodeID].num_parties, flagScore, nodeScores[nodeID].num_parties);
+
+                }
+                else {
+                    yearValue = {
+                        node_rules: {
+                            [flag.id]: flagScore
+                        },
+                        year: year
+                    };
+                    nodeScores[nodeID].years.push(yearValue);
+                }
+
             })
 
         } );

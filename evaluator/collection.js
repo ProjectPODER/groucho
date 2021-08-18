@@ -301,19 +301,17 @@ function getPartyNodeSummary(collection, nodeScores) {
             //TODO: Review years here
             // Assign each node_score object to each evaluated year
             item.years.map( (year) => {
+                // console.log("getPartyNodeSummary",year);
                 if(node_score.years[year.year]) {
                     let year_node_scores_sum = 0;
                     let year_node_scores_count = 0;
-                    Object.keys(node_score.years[year.year].nodeScore).map( (x) => {
-                        if(node_score.years[year.year].nodeScore[x].hasOwnProperty('score'))
-                            year_node_scores_sum += node_score.years[year.year].nodeScore[x].score;
-                        else
-                            year_node_scores_sum += node_score.years[year.year].nodeScore[x];
+                    Object.keys(node_score.years[year.year].node_rules).map( (x) => {
+                        year_node_scores_sum += node_score.years[year.year].node_rules[x];
                         year_node_scores_count++;
                     } );
-                    let year_node_total_score = year_node_scores_sum / year_node_scores_count;
-                    Object.assign( node_score.years[year.year].nodeScore, { 'total_score': year_node_total_score } );
-                    Object.assign( year, { 'node_rules': node_score.years[year.year].nodeScore } );
+                    let year_node_total_score = year_node_scores_sum / year_node_scores_count;                
+                    Object.assign( node_score.years[year.year].node_rules, { 'total_score': year_node_total_score } );
+                    Object.assign( year, { 'node_rules': node_score.years[year.year].node_rules } );
                 }
             } );
         }

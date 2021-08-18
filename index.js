@@ -11,7 +11,7 @@ const {
     getPartyCriteriaSummary,
     getPartyNodeSummary,
     getContractCriteriaSummary,
-    sendCollectionToDB
+    // sendCollectionToDB
 } = require('./evaluator/collection');
 const { createOrgTree, updateOrgTree } = require('./evaluator/tree');
 
@@ -33,12 +33,12 @@ if(!args.flags) {
     process.exit(1);
 }
 
-let seenRecords = 0;            // Counter for records read from DB
+// let seenRecords = 0;            // Counter for records read from DB
 let seenContracts = 0;          // Counter for contracts extracted from records
-let sentContracts = 0;          // Counter for contracts sent to DB
+// let sentContracts = 0;          // Counter for contracts sent to DB
 let contractEvaluations = [];
-let contractPromises = [];
-let partyPromises = [];
+// let contractPromises = [];
+// let partyPromises = [];
 const chunkSize = 1;                // How many documents will be sent to DB at once
 const flags = parseFlags(args.flags);   // TODO: Add a syntax check to the flags definition. Should output warnings for rules with errors.
 const flagCollectionObj = createFlagCollectionObject(flags.ruleset_id, flags.contract_rules);
@@ -133,6 +133,7 @@ function evaluateParties(client) {
 
                 if(parties % chunkSize == 0 || parties >= arrayLength) {
                     let party_flags = getPartyNodeSummary(partyChunk, nodeScores);
+                    
                     party_flags.map(party_flag => {
                         //TODO: Check duplicated output
                         console.log(JSON.stringify(party_flag));
@@ -286,55 +287,3 @@ function evaluateFromStream(record) {
     }
     return contractEval;
 }
-
-
-
-
-//     records.find( query, { limit: globalCount, skip: skip } )
-//     .each( (record, {close, pause, resume}) => { // Process each record found with query
-//         seenRecords++;
-//         let contract = null;
-//         let evaluations = null;
-
-//         // Check if we are working with records or releases
-//         if( record.hasOwnProperty('compiledRelease') )
-//             contract = record.compiledRelease;
-//         else contract = record;
-// console.log(seenRecords, contract.ocid);
-//         if( isValidContract(contract) ) {
-//             evaluations = evaluateFlags(contract, flags, flagCollectionObj); // Perform evaluation of the document
-//             seenContracts += evaluations.length;
-//             evaluations.map( (evaluation) => {
-//                 evaluation.contratoFlags.parties.map( (party) => { // Assign contractScore values to all the parties involved
-//                     updateFlagCollection(party, partyFlagCollection, evaluation.year, evaluation.contratoFlags.flags);
-//                 } );
-
-//                 // AQUI BANDERAS NODO Y CONFIABILIDAD
-//                 updateOrgTree(orgTree.roots, evaluation.contract, evaluation.contratoFlags.parties);
-//             } );
-//             contractEvaluations = contractEvaluations.concat(getContractCriteriaSummary(evaluations, flagCriteriaObj));
-//         }
-
-//         // Cleanup...
-//         record = null;
-//         contract = null;
-//         evaluations = null;
-
-//         // If we are testing, stop here and output test results
-//         if(args.test) {
-//             console.log('Test results:');
-//             console.log('----------------------------------------------------');
-//             console.log('Contract Flags');
-//             console.log( JSON.stringify(contractEvaluations, null, 4) );
-//             console.log('----------------------------------------------------');
-//             console.log('Party Flags');
-//             console.log( partyFlagCollection );
-//             console.log('----------------------------------------------------');
-//             console.log('Org Tree:');
-//             console.log( JSON.stringify(orgTree, null, 4) );
-//             console.timeEnd('duration');
-//             // process.exit(1);
-//         }
-
-
-//     } )    
