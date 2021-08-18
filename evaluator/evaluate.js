@@ -192,7 +192,7 @@ function evaluateFlags(record, flags, flagCollectionObj) {
         } );
 
         // Iterate flags
-        flags.map( (flag) => {
+        flags.contract.map( (flag) => {
             let flagScore = getFlagScore(contract, flag);
             contratoFlags.flags[flag.categoryID][flag.id].push({ year: year, score: flagScore });
         } );
@@ -206,8 +206,8 @@ function evaluateFlags(record, flags, flagCollectionObj) {
     return results;
 }
 
-function evaluateNodeFlags(roots, partyScores) {
-    let nodeScores = {};
+function evaluateNodeFlags(roots, nodeScores,flags) {
+    // let nodeScores = {};
 
     for(var rootID in roots) {
         let branch = roots[rootID];
@@ -221,320 +221,15 @@ function evaluateNodeFlags(roots, partyScores) {
                 supplierIDs.push( branch.children[childID].id );
         }
 
-        // ---------- CONFIABILIDAD GLOBAL ----------
-
-        // Promediar total_scores de todos los suppliers de esta UC, y calcular confiabilidad para los suppliers en el mismo loop
-        let supplier_total_score_avg = 0;
-        let supplier_total_score = 0;
-        supplierIDs.map( (id) => {
-            if(partyScores[id]) {
-                supplier_total_score += partyScores[id].contract_categories.total_score;
-                if( !nodeScores[id] ) { // No hemos visto este supplier todavía
-                    nodeScores[id] = {
-                        nodeScore: {
-                            conf: partyScores[ucID].contract_categories.total_score,
-                            aepm: 0,
-                            aepc: 0,
-                            tcr10: 0,
-                            mcr10: 0,
-                            celp: 0,
-                            rla: 0,
-                            ncap3: 0
-                        },
-                        numParties: 1,
-                        years: {}
-                    }
-                }
-                else {
-                    nodeScores[id].nodeScore.conf = accumulativeAverage(nodeScores[id].nodeScore.conf, nodeScores[id].numParties, partyScores[ucID].contract_categories.total_score, 1);
-                    nodeScores[id].numParties ++;
-                }
-            }
-        } );
-        supplier_total_score_avg = supplier_total_score / supplierIDs.length;
-
-        // Asignar confiabilidad a la UC
-        if( !nodeScores[ucID] ) {
-            nodeScores[ucID] = {
-                nodeScore: {
-                    conf: supplier_total_score_avg,
-                    aepm: 0,
-                    aepc: 0,
-                    tcr10: 0,
-                    mcr10: 0,
-                    celp: 0,
-                    rla: 0,
-                    ncap3: 0
-                },
-                numParties: supplierIDs.length,
-                years: {}
-            }
+        console.log("supplierIDs",supplierIDs);
+        
+        evaluateNode([ucID],nodeScores,flags,supplierIDs, branch);
+        if (dependenciaID) {
+            evaluateNode([dependenciaID],nodeScores,flags,supplierIDs, branch);
         }
-        else {
-            nodeScores[ucID].nodeScore.conf = accumulativeAverage(nodeScores[ucID].nodeScore.conf, nodeScores[ucID].numParties, supplier_total_score, supplierIDs.length);
-            nodeScores[ucID].numParties += supplierIDs.length;
-        }
-        if(dependenciaID) {
-            // Calcular confiabilidad de la dependencia
-            if( !nodeScores[dependenciaID] ) {
-                nodeScores[dependenciaID] = {
-                    nodeScore: {
-                        conf: nodeScores[ucID].nodeScore.conf,
-                        aepm: 0,
-                        aepc: 0,
-                        tcr10: 0,
-                        mcr10: 0,
-                        celp: 0,
-                        rla: 0,
-                        ncap3: 0
-                    },
-                    numParties: 0,
-                    years: {}
-                }
-            }
-            else {
-                nodeScores[dependenciaID].nodeScore.conf = accumulativeAverage(nodeScores[dependenciaID].nodeScore.conf, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.conf, 1);
-                // nodeScores[dependenciaID].numParties++; No acumulamos aquí, porque necesitaremos este contador al final. Acumulamos al final.
-            }
-        }
-
-        let years_seen = 0;
-        let aepm_acc = 0;
-        let aepc_acc = 0;
-        let tcr10_acc = 0;
-        let mcr10_acc = 0;
-        let celp_acc = 0;
-        let rla_acc = 0;
-        let ncap3_acc = 0;
-        for(var year in branch.years) {
-            years_seen++;
-            // ---------- CONFIABILIDAD POR AÑOS ----------
-
-            let year_scores_avg = getSupplierYearScores(supplierIDs, partyScores, year);
-            let uc_year_score = getBuyerYearScore(ucID, partyScores, year);
-
-            // UC
-            if( !nodeScores[ucID].years[year] ) {
-                nodeScores[ucID].years[year] = {
-                    nodeScore: {
-                        conf: year_scores_avg.score,
-                        aepm: { score:0 },
-                        aepc: { score:0 },
-                        tcr10: { score:0 },
-                        mcr10: { score:0 },
-                        celp: { score:0 },
-                        rla: { score:0 },
-                        ncap3: { score:0 }
-                    },
-                    numParties: year_scores_avg.count
-                }
-            }
-            else {
-                nodeScores[ucID].years[year].nodeScore.conf = accumulativeAverage(nodeScores[ucID].years[year].nodeScore.conf, nodeScores[ucID].years[year].numParties, year_scores_avg.score, year_scores_avg.count);
-                nodeScores[ucID].years[year].numParties += year_scores_avg.count;
-            }
-
-            // Suppliers
-            year_scores_avg.suppliers.map( (id) => {
-                if( !nodeScores[id].years[year] ) {
-                    nodeScores[id].years[year] = {
-                        nodeScore: { conf: uc_year_score },
-                        numParties: 1
-                    }
-                }
-                else {
-                    nodeScores[id].years[year].nodeScore.conf = accumulativeAverage(nodeScores[id].years[year].nodeScore.conf, nodeScores[id].years[year].numParties, uc_year_score, 1);
-                    nodeScores[id].years[year].numParties++;
-                }
-            } );
-
-            let seen = false;
-            // ---------- AGENTE ECONOMICO PREPONDERANTE (MONTO) ----------
-            let aepm_threshhold = 0.5; // More than aepm_threshhold % of contract amounts to same supplier
-            let supplier_year_amounts = getSupplierYearAmounts(branch, year);
-            let buyer_year_total = branch.years[year].c_a;
-
-            nodeScores[ucID].years[year].nodeScore.aepm = { score: 1 };
-            if(supplier_year_amounts.length > 0) {
-                seen = false;
-                supplier_year_amounts.map( (s) => {
-                    if(s.amount >= buyer_year_total * aepm_threshhold) {
-                        nodeScores[ucID].years[year].nodeScore.aepm = {
-                            supplier: s.id,
-                            value: s.amount / buyer_year_total,
-                            score: 0
-                        };
-                        seen = true;
-                    }
-                } );
-                if(!seen) aepm_acc++;
-            }
-
-            // ---------- AGENTE ECONOMICO PREPONDERANTE (CANTIDAD) ----------
-            let aepc_threshhold = 0.5; // More than aepm_threshhold % of contract amounts to same supplier
-            let supplier_year_counts = getSupplierYearCounts(branch, year);
-            let buyer_year_count = branch.years[year].c_c;
-
-            nodeScores[ucID].years[year].nodeScore.aepc = { score: 1 };
-            if(supplier_year_counts.length > 0) {
-                seen = false;
-                supplier_year_counts.map( (s) => {
-                    if(s.count >= buyer_year_count * aepc_threshhold) {
-                        nodeScores[ucID].years[year].nodeScore.aepc = {
-                            supplier: s.id,
-                            value: s.count / buyer_year_count,
-                            score: 0
-                        };
-                        seen = true;
-                    }
-                } );
-                if(!seen) aepc_acc++;
-            }
-
-            // ---------- TITULO DE CONTRATO REPETIDO ----------
-            let tcr10_threshhold = 0.1;
-            let buyer_year_title_count = branch.years[year].c_c;
-
-            seen = false;
-            nodeScores[ucID].years[year].nodeScore.tcr10 = { score: 1 };
-            if(buyer_year_title_count > 10) {
-                for(var t in branch.years[year].titles) {
-                    if( branch.years[year].titles[t] >= buyer_year_title_count * tcr10_threshhold ) {
-                        nodeScores[ucID].years[year].nodeScore.tcr10 = {
-                            title: t,
-                            value: branch.years[year].titles[t] / buyer_year_title_count,
-                            score: 0
-                        };
-                        seen = true;
-                    }
-                }
-            }
-            if(!seen) tcr10_acc++;
-
-            // ---------- MONTO DE CONTRATO REPETIDO ----------
-            let mcr10_threshhold = 0.1;
-            let buyer_year_amount_count = branch.years[year].c_c;
-
-            seen = false;
-            nodeScores[ucID].years[year].nodeScore.mcr10 = { score: 1 };
-            if(buyer_year_amount_count > 10) {
-                for(var a in branch.years[year].amounts) {
-                    if( branch.years[year].amounts[a] >= buyer_year_amount_count * mcr10_threshhold ) {
-                        nodeScores[ucID].years[year].nodeScore.mcr10 = {
-                            amount: a,
-                            value: branch.years[year].amounts[a] / buyer_year_amount_count,
-                            score: 0
-                        };
-                        seen = true;
-                    }
-                }
-            }
-            if(!seen) mcr10_acc++;
-
-            // ---------- CONCENTRACION DE EXCEPCIONES A LICITACION PUBLICA ----------
-            let celp_threshhold = 0.333;
-            let supplier_year_direct_amounts = getSupplierYearDirectAmounts(branch, year);
-            let buyer_year_direct_total = branch.years[year].direct.c_a;
-
-            nodeScores[ucID].years[year].nodeScore.celp = { score: 1 };
-            seen = false;
-            if(supplier_year_direct_amounts.length > 0 && buyer_year_direct_total > 0) {
-                supplier_year_amounts.map( (s) => {
-                    if(s.amount >= buyer_year_direct_total * celp_threshhold) {
-                        nodeScores[ucID].years[year].nodeScore.celp = {
-                            supplier: s.id,
-                            value: s.amount / buyer_year_direct_total,
-                            score: 0
-                        };
-                        seen = true;
-                    }
-                } );
-            }
-            if(!seen) celp_acc++;
-
-            // ---------- REBASA EL LIMITE ASIGNADO ----------
-            let rla_threshhold = 0.3;
-            nodeScores[ucID].years[year].nodeScore.rla = { score: 1 };
-            if(buyer_year_direct_total > branch.years[year].c_a * rla_threshhold) {
-                nodeScores[ucID].years[year].nodeScore.rla = {
-                    value: buyer_year_direct_total / branch.years[year].c_a,
-                    score: 0
-                };
-            }
-            else {
-                rla_acc++;
-            }
-
-            // ---------- NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO ----------
-            let ncap3_threshhold = 0.03;
-
-            seen = false;
-            nodeScores[ucID].years[year].nodeScore.ncap3 = { score: 1 };
-            if(buyer_year_count > 10) {
-                for(var d in branch.years[year].dates) {
-                    if(branch.years[year].dates[d] >= buyer_year_count * ncap3_threshhold) {
-                        nodeScores[ucID].years[year].nodeScore.ncap3 = {
-                            date: d,
-                            value: branch.years[year].dates[d] / buyer_year_count,
-                            score: 0
-                        };
-                        seen = true;
-                    }
-                }
-            }
-            if(!seen) ncap3_acc++;
-
-            if(dependenciaID) {
-                // Dependencia
-                if( !nodeScores[dependenciaID].years[year] ) {
-                    nodeScores[dependenciaID].years[year] = {
-                        nodeScore: {
-                            conf: nodeScores[ucID].years[year].nodeScore.conf,
-                            aepm: nodeScores[ucID].years[year].nodeScore.aepm.score,
-                            aepc: nodeScores[ucID].years[year].nodeScore.aepc.score,
-                            tcr10: nodeScores[ucID].years[year].nodeScore.tcr10.score,
-                            mcr10: nodeScores[ucID].years[year].nodeScore.mcr10.score,
-                            celp: nodeScores[ucID].years[year].nodeScore.celp.score,
-                            rla: nodeScores[ucID].years[year].nodeScore.rla.score,
-                            ncap3: nodeScores[ucID].years[year].nodeScore.ncap3.score
-                        },
-                        numParties: 1
-                    }
-                }
-                else {
-                    nodeScores[dependenciaID].years[year].nodeScore.conf = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.conf, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.conf, 1);
-                    nodeScores[dependenciaID].years[year].nodeScore.aepm = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.aepm, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.aepm.score, 1);
-                    nodeScores[dependenciaID].years[year].nodeScore.aepc = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.aepc, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.aepc.score, 1);
-                    nodeScores[dependenciaID].years[year].nodeScore.tcr10 = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.tcr10, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.tcr10.score, 1);
-                    nodeScores[dependenciaID].years[year].nodeScore.mcr10 = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.mcr10, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.mcr10.score, 1);
-                    nodeScores[dependenciaID].years[year].nodeScore.celp = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.celp, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.celp.score, 1);
-                    nodeScores[dependenciaID].years[year].nodeScore.rla = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.rla, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.rla.score, 1);
-                    nodeScores[dependenciaID].years[year].nodeScore.ncap3 = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.ncap3, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.ncap3.score, 1);
-                    nodeScores[dependenciaID].years[year].numParties++;
-                }
-            }
-        }
-
-        // Promedios globales por banderas de nodo para la UC
-        nodeScores[ucID].nodeScore.aepm = aepm_acc / years_seen;
-        nodeScores[ucID].nodeScore.aepc = aepc_acc / years_seen;
-        nodeScores[ucID].nodeScore.tcr10 = tcr10_acc / years_seen;
-        nodeScores[ucID].nodeScore.mcr10 = mcr10_acc / years_seen;
-        nodeScores[ucID].nodeScore.celp = celp_acc / years_seen;
-        nodeScores[ucID].nodeScore.rla = rla_acc / years_seen;
-        nodeScores[ucID].nodeScore.ncap3 = ncap3_acc / years_seen;
-
-        if(dependenciaID) {
-            // Promedios globales por banderas de nodo para la dependencia
-            nodeScores[dependenciaID].nodeScore.aepm = accumulativeAverage(nodeScores[dependenciaID].nodeScore.aepm, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.aepm, 1);
-            nodeScores[dependenciaID].nodeScore.aepc = accumulativeAverage(nodeScores[dependenciaID].nodeScore.aepc, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.aepc, 1);
-            nodeScores[dependenciaID].nodeScore.tcr10 = accumulativeAverage(nodeScores[dependenciaID].nodeScore.tcr10, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.tcr10, 1);
-            nodeScores[dependenciaID].nodeScore.mcr10 = accumulativeAverage(nodeScores[dependenciaID].nodeScore.mcr10, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.mcr10, 1);
-            nodeScores[dependenciaID].nodeScore.celp = accumulativeAverage(nodeScores[dependenciaID].nodeScore.celp, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.celp, 1);
-            nodeScores[dependenciaID].nodeScore.rla = accumulativeAverage(nodeScores[dependenciaID].nodeScore.rla, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.rla, 1);
-            nodeScores[dependenciaID].nodeScore.ncap3 = accumulativeAverage(nodeScores[dependenciaID].nodeScore.ncap3, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.ncap3, 1);
-            nodeScores[dependenciaID].numParties++;
-        }
+        evaluateNode(supplierIDs,nodeScores,flags,supplierIDs, branch);
+        
+        // console.log("evaluateNodeFlags",nodeScores);
 
         // Cleanup...
         branch = null;
@@ -543,6 +238,307 @@ function evaluateNodeFlags(roots, partyScores) {
 
     return nodeScores;
 }
+
+function evaluateNode(nodeIDs,nodeScores,flags,supplierIDs,branch) {
+    // console.log("evaluateNode",nodeIDs);
+
+    nodeIDs.map(nodeID => {
+        if (!nodeScores[nodeID]) {
+            console.log("evaluateNode: Uninitialized node",nodeID)
+            return;
+        }
+        nodeScores[nodeID].num_parties ++
+
+        // Iterate flags
+        flags.map( (flag) => {
+
+            let branch_years = Object.keys(branch.years);
+            // console.log("evaluateNode",)
+
+            branch_years.map(year => {
+
+                let flagScore = getNodeFlagScore(nodeScores, flag, supplierIDs,branch,year);
+                //Add value to party
+                console.log(nodeID,year,flagScore,flag.id);
+                nodeScores[nodeID].node_rules[flag.id] = accumulativeAverage(nodeScores[nodeID].node_rules[flag.id], nodeScores[nodeID].num_parties, flagScore, nodeScores[nodeID].num_parties);
+    
+                //Add value to years
+                nodeScores[nodeID].years[flag.id] = accumulativeAverage(nodeScores[nodeID].years[flag.id], nodeScores[nodeID].num_parties, flagScore, nodeScores[nodeID].num_parties);
+            })
+
+        } );
+
+
+    })
+
+}
+
+function getNodeFlagScore(nodeScores, flag, supplierIDs,branch,year) {
+    switch(flag.id) {
+        case "conf-conf":
+            return partyGlobalReliability(supplierIDs, nodeScores);
+        case "comp-aepm":
+            return predominantEconomicAgentAmount(branch,year);
+        case "comp-aepc":
+            return predominantEconomicAgentCount(branch,year);
+        case "traz-trc":
+            return repeatedTitle(branch, year);
+        case "traz-mcr":
+            return repeatedAmount(branch,year);
+        case "comp-celp":
+            return tooManyDirectContracts(branch,year);
+        case "comp-rla":
+            return overTheLimit(branch,year);
+        case "comp-ncap":
+            return aboveAverageContractAmount(branch,year);
+    }
+}
+
+
+// ---------- CONFIABILIDAD GLOBAL ----------
+
+// Promediar total_scores de todos los suppliers de esta UC, y calcular confiabilidad para los suppliers en el mismo loop
+function partyGlobalReliability(supplierIDs,partyScores) {
+
+    let supplier_total_score_avg = 0;
+    let supplier_total_score = 0;
+
+    supplierIDs.map( (id) => {
+        if(partyScores[id]) {
+            //This case is for suppliers
+            if (partyScores[id].contract_categories.total_score) {
+
+                supplier_total_score += partyScores[id].contract_categories.total_score;
+            }
+            //This case is for dependencias
+            else if (nodeScores[ucID].nodeScore.conf) {
+                supplier_total_score = nodeScores[ucID].nodeScore.conf
+            }
+        }
+    } );
+    return supplier_total_score_avg = supplier_total_score / supplierIDs.length;
+}
+// ---------- CONFIABILIDAD POR AÑOS ----------
+function yearlyReliability_____NOSE() {
+    let years_seen = 0;
+    let aepm_acc = 0;
+    let aepc_acc = 0;
+    let tcr10_acc = 0;
+    let mcr10_acc = 0;
+    let celp_acc = 0;
+    let rla_acc = 0;
+    let ncap3_acc = 0;
+    for(var year in branch.years) {
+        years_seen++;
+
+        let year_scores_avg = getSupplierYearScores(supplierIDs, partyScores, year);
+        let uc_year_score = getBuyerYearScore(ucID, partyScores, year);
+
+        // UC
+        if( !nodeScores[ucID].years[year] ) {
+            nodeScores[ucID].years[year] = {
+                nodeScore: {
+                    conf: year_scores_avg.score,
+                    aepm: { score:0 },
+                    aepc: { score:0 },
+                    tcr10: { score:0 },
+                    mcr10: { score:0 },
+                    celp: { score:0 },
+                    rla: { score:0 },
+                    ncap3: { score:0 }
+                },
+                numParties: year_scores_avg.count
+            }
+        }
+        else {
+            nodeScores[ucID].years[year].nodeScore.conf = accumulativeAverage(nodeScores[ucID].years[year].nodeScore.conf, nodeScores[ucID].years[year].numParties, year_scores_avg.score, year_scores_avg.count);
+            nodeScores[ucID].years[year].numParties += year_scores_avg.count;
+        }
+
+        // Suppliers
+        year_scores_avg.suppliers.map( (id) => {
+            if( !nodeScores[id].years[year] ) {
+                nodeScores[id].years[year] = {
+                    nodeScore: { conf: uc_year_score },
+                    numParties: 1
+                }
+            }
+            else {
+                nodeScores[id].years[year].nodeScore.conf = accumulativeAverage(nodeScores[id].years[year].nodeScore.conf, nodeScores[id].years[year].numParties, uc_year_score, 1);
+                nodeScores[id].years[year].numParties++;
+            }
+        } );
+
+        let seen = false;
+    }    
+}
+
+// ---------- AGENTE ECONOMICO PREPONDERANTE (MONTO) ----------
+function predominantEconomicAgentAmount(branch,year) {
+
+    let aepm_threshhold = 0.5; // More than aepm_threshhold % of contract amounts to same supplier
+    let supplier_year_amounts = getSupplierYearAmounts(branch, year);
+    let buyer_year_total = branch.years[year].c_a;
+
+    let score_object = { score: 1 };
+    if(supplier_year_amounts.length > 0) {
+        supplier_year_amounts.map( (s) => {
+            if(s.amount >= buyer_year_total * aepm_threshhold) {
+                score_object = {
+                    supplier: s.id,
+                    value: s.amount / buyer_year_total,
+                    score: 0
+                };
+            }
+        } );
+    }
+
+    return score_object.score;
+}
+// ---------- AGENTE ECONOMICO PREPONDERANTE (CANTIDAD) ----------
+function predominantEconomicAgentCount(branch,year) {
+
+    let aepc_threshhold = 0.5; // More than aepm_threshhold % of contract amounts to same supplier
+    let supplier_year_counts = getSupplierYearCounts(branch, year);
+    let buyer_year_count = branch.years[year].c_c;
+
+    let result = { score: 1 };
+    if(supplier_year_counts.length > 0) {
+        seen = false;
+        supplier_year_counts.map( (s) => {
+            if(s.count >= buyer_year_count * aepc_threshhold) {
+                result = {
+                    supplier: s.id,
+                    value: s.count / buyer_year_count,
+                    score: 0
+                };
+                seen = true;
+            }
+        } );
+        // if(!seen) aepc_acc++;
+    }
+
+    return result.score;
+}
+// ---------- TITULO DE CONTRATO REPETIDO ----------
+function repeatedTitle(branch,year) {
+
+    let tcr10_threshhold = 0.1;
+    let buyer_year_title_count = branch.years[year].c_c;
+
+    seen = false;
+    let result = { score: 1 };
+    if(buyer_year_title_count > 10) {
+        for(var t in branch.years[year].titles) {
+            if( branch.years[year].titles[t] >= buyer_year_title_count * tcr10_threshhold ) {
+                result = {
+                    title: t,
+                    value: branch.years[year].titles[t] / buyer_year_title_count,
+                    score: 0
+                };
+                seen = true;
+            }
+        }
+    }
+    // if(!seen) tcr10_acc++;
+
+    return result.score;
+}
+// ---------- MONTO DE CONTRATO REPETIDO ----------
+function repeatedAmount(branch,year) {
+
+    let mcr10_threshhold = 0.1;
+    let buyer_year_amount_count = branch.years[year].c_c;
+
+    seen = false;
+    let result = { score: 1 };
+    if(buyer_year_amount_count > 10) {
+        for(var a in branch.years[year].amounts) {
+            if( branch.years[year].amounts[a] >= buyer_year_amount_count * mcr10_threshhold ) {
+                result = {
+                    amount: a,
+                    value: branch.years[year].amounts[a] / buyer_year_amount_count,
+                    score: 0
+                };
+                seen = true;
+            }
+        }
+    }
+    // if(!seen) mcr10_acc++;
+
+    return result.score;
+}
+
+// ---------- CONCENTRACION DE EXCEPCIONES A LICITACION PUBLICA ----------
+function tooManyDirectContracts(branch,year) {
+    let celp_threshhold = 0.333;
+    let supplier_year_direct_amounts = getSupplierYearDirectAmounts(branch, year);
+    let buyer_year_direct_total = branch.years[year].direct.c_a;
+
+    let result = { score: 1 };
+    seen = false;
+    if(supplier_year_direct_amounts.length > 0 && buyer_year_direct_total > 0) {
+        supplier_year_amounts.map( (s) => {
+            if(s.amount >= buyer_year_direct_total * celp_threshhold) {
+                result = {
+                    supplier: s.id,
+                    value: s.amount / buyer_year_direct_total,
+                    score: 0
+                };
+                seen = true;
+            }
+        } );
+    }
+    // if(!seen) celp_acc++;
+
+    return result.score;
+}
+
+
+// ---------- REBASA EL LIMITE ASIGNADO ----------
+function overTheLimit(branch,year) {
+
+    let rla_threshhold = 0.3;
+    let result = { score: 1 };
+    let buyer_year_direct_total = branch.years[year].direct.c_a;
+
+    if(buyer_year_direct_total > branch.years[year].c_a * rla_threshhold) {
+        result = {
+            value: buyer_year_direct_total / branch.years[year].c_a,
+            score: 0
+        };
+    }
+    else {
+        // rla_acc++;
+    }
+
+    return result.score;
+}
+
+// ---------- NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO ----------
+function aboveAverageContractAmount(branch,year) {
+
+    let ncap3_threshhold = 0.03;
+    let buyer_year_count = branch.years[year].c_c;
+
+    seen = false;
+    let result  = { score: 1 };
+    if(buyer_year_count > 10) {
+        for(var d in branch.years[year].dates) {
+            if(branch.years[year].dates[d] >= buyer_year_count * ncap3_threshhold) {
+                result = {
+                    date: d,
+                    value: branch.years[year].dates[d] / buyer_year_count,
+                    score: 0
+                };
+                seen = true;
+            }
+        }
+    }
+    // if(!seen) ncap3_acc++;
+    return result.score;
+}
+
 
 function getSupplierYearDirectAmounts(branch, year) {
     let amounts = [];
@@ -614,3 +610,59 @@ function getSupplierYearScores(supplierIDs, partyScores, year) {
 }
 
 module.exports = { evaluateFlags, evaluateNodeFlags };
+
+
+
+        
+
+        // Promedios globales por banderas de nodo para la UC
+        // nodeScores[ucID].nodeScore.aepm = aepm_acc / years_seen;
+        // nodeScores[ucID].nodeScore.aepc = aepc_acc / years_seen;
+        // nodeScores[ucID].nodeScore.tcr10 = tcr10_acc / years_seen;
+        // nodeScores[ucID].nodeScore.mcr10 = mcr10_acc / years_seen;
+        // nodeScores[ucID].nodeScore.celp = celp_acc / years_seen;
+        // nodeScores[ucID].nodeScore.rla = rla_acc / years_seen;
+        // nodeScores[ucID].nodeScore.ncap3 = ncap3_acc / years_seen;
+
+        // if(dependenciaID) {
+        //     // Promedios globales por banderas de nodo para la dependencia
+        //     nodeScores[dependenciaID].nodeScore.aepm = accumulativeAverage(nodeScores[dependenciaID].nodeScore.aepm, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.aepm, 1);
+        //     nodeScores[dependenciaID].nodeScore.aepc = accumulativeAverage(nodeScores[dependenciaID].nodeScore.aepc, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.aepc, 1);
+        //     nodeScores[dependenciaID].nodeScore.tcr10 = accumulativeAverage(nodeScores[dependenciaID].nodeScore.tcr10, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.tcr10, 1);
+        //     nodeScores[dependenciaID].nodeScore.mcr10 = accumulativeAverage(nodeScores[dependenciaID].nodeScore.mcr10, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.mcr10, 1);
+        //     nodeScores[dependenciaID].nodeScore.celp = accumulativeAverage(nodeScores[dependenciaID].nodeScore.celp, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.celp, 1);
+        //     nodeScores[dependenciaID].nodeScore.rla = accumulativeAverage(nodeScores[dependenciaID].nodeScore.rla, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.rla, 1);
+        //     nodeScores[dependenciaID].nodeScore.ncap3 = accumulativeAverage(nodeScores[dependenciaID].nodeScore.ncap3, nodeScores[dependenciaID].numParties, nodeScores[ucID].nodeScore.ncap3, 1);
+        //     nodeScores[dependenciaID].numParties++;
+        // }
+
+
+    // if(dependenciaID) {
+    //     // Dependencia
+    //     if( !nodeScores[dependenciaID].years[year] ) {
+    //         nodeScores[dependenciaID].years[year] = {
+    //             nodeScore: {
+    //                 conf: nodeScores[ucID].years[year].nodeScore.conf,
+    //                 aepm: nodeScores[ucID].years[year].nodeScore.aepm.score,
+    //                 aepc: nodeScores[ucID].years[year].nodeScore.aepc.score,
+    //                 tcr10: nodeScores[ucID].years[year].nodeScore.tcr10.score,
+    //                 mcr10: nodeScores[ucID].years[year].nodeScore.mcr10.score,
+    //                 celp: nodeScores[ucID].years[year].nodeScore.celp.score,
+    //                 rla: nodeScores[ucID].years[year].nodeScore.rla.score,
+    //                 ncap3: nodeScores[ucID].years[year].nodeScore.ncap3.score
+    //             },
+    //             numParties: 1
+    //         }
+    //     }
+    //     else {
+    //         nodeScores[dependenciaID].years[year].nodeScore.conf = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.conf, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.conf, 1);
+    //         nodeScores[dependenciaID].years[year].nodeScore.aepm = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.aepm, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.aepm.score, 1);
+    //         nodeScores[dependenciaID].years[year].nodeScore.aepc = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.aepc, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.aepc.score, 1);
+    //         nodeScores[dependenciaID].years[year].nodeScore.tcr10 = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.tcr10, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.tcr10.score, 1);
+    //         nodeScores[dependenciaID].years[year].nodeScore.mcr10 = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.mcr10, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.mcr10.score, 1);
+    //         nodeScores[dependenciaID].years[year].nodeScore.celp = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.celp, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.celp.score, 1);
+    //         nodeScores[dependenciaID].years[year].nodeScore.rla = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.rla, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.rla.score, 1);
+    //         nodeScores[dependenciaID].years[year].nodeScore.ncap3 = accumulativeAverage(nodeScores[dependenciaID].years[year].nodeScore.ncap3, nodeScores[dependenciaID].years[year].numParties, nodeScores[ucID].years[year].nodeScore.ncap3.score, 1);
+    //         nodeScores[dependenciaID].years[year].numParties++;
+    //     }
+    // }

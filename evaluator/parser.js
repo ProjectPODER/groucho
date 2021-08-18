@@ -46,10 +46,30 @@ function parseFlags(file) {
         rulesArr.contract_rules.push(ruleObj);
     } );
 
+    let party_rules = flags.parties;
+
+    party_rules.map( (rule) => {
+        var ruleObj = {
+            id: rule.id,
+            name: rule.name,
+            category: rule.category,
+            categoryID: "conf",
+            flagType: rule.type,
+            fields: getRuleField(rule, 'fields'),           // VALIDAR
+            values: getRuleField(rule, 'values'),           // VALIDAR
+            dates: getRuleField(rule, 'dates'),             // VALIDAR
+            difference: getRuleField(rule, 'difference'),   // VALIDAR
+        };
+
+        rulesArr.party_rules.push(ruleObj);
+    } );
+
+
     return rulesArr;
 }
 
 function getCriteriaObject(flags) {
+    // console.log("getCriteriaObject",flags);
     var criteriaArr = [];
     flags.map( (flag) => {
         if( !criteriaArr.includes(flag.categoryID) ) {
@@ -61,9 +81,25 @@ function getCriteriaObject(flags) {
     criteriaArr.map( (item) => {
         criteriaObj[item] = 0;
     } );
-    criteriaObj['total_score'] = 0;
 
     return criteriaObj;
 }
 
-module.exports = { parseFlags, getCriteriaObject };
+function getPartyCriteriaObject(flags) {
+    // console.log("getPartyCriteriaObject",flags);
+    var criteriaArr = [];
+    flags.map( (flag) => {
+        if( !criteriaArr.includes(flag.id) ) {
+            criteriaArr.push(flag.id);
+        }
+    } );
+
+    var criteriaObj = { total_score: 0 };
+    criteriaArr.map( (item) => {
+        criteriaObj[item] = 0;
+    } );
+
+    return criteriaObj;
+}
+
+module.exports = { parseFlags, getCriteriaObject, getPartyCriteriaObject };

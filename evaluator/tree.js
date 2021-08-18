@@ -185,35 +185,32 @@ function updateOrgTree(roots, contract, parties) {
 function extractDataFromContract(contract) {
     let dependency_id = '';
     let uc_id = '';
-    let proc_method = contract.tender.procurementMethod;
+    let proc_method = ""; // TODO: get contract.tender.procurementMethod for contract_flags
     let suppliers = [];
     let funders = [];
 
+    // console.log(contract)
+
     contract.parties.map( (p) => {
-        let role = p.roles[0];
+        let role = p.entity;
         if(role == 'buyer') {
             uc_id = p.id;
-            dependency_id = p.memberOf[0].id;
+            // dependency_id = p.memberOf[0].id;
         }
         if(role == 'funder') {
             funders.push(p.id);
         }
-    } );
-
-    contract.contracts.map( (c) => {
-        let date = c.hasOwnProperty('dateSigned')? c.dateSigned : c.period.startDate;
-        let date_parts = processDate(date);
-        let c_summary = {
-            year: date_parts[0].toString(),
-            date: date_parts[1] + '-' + date_parts[2],
-            title: c.title,
-            amount: parseFloat(c.value.amount)
+        if(role == 'supplier') {
+            let date = contract.hasOwnProperty('date_signed')? contract.date_signed.$date : contract.period.startDate;
+            let date_parts = processDate(date);
+            let c_summary = {
+                year: date_parts[0].toString(),
+                date: date_parts[1] + '-' + date_parts[2],
+                id: contract.id,
+                amount: parseFloat(contract.value.amount)
+            }            
+            suppliers.push( { id: p.id, contract: c_summary } );
         }
-        let supplier_ids = getSupplierIDs(contract.awards, c.awardID);
-        supplier_ids.map( (s) => {
-            if(s.id)
-                suppliers.push( { id: s.id, contract: c_summary } );
-        } )
     } );
 
     return {

@@ -125,7 +125,7 @@
             ]
         },
         {
-            "id": "temp-fs-beta",
+            "id": "temp-fs",
             "category": "Temporalidad",
             "name": "Fechas Sospechosas",
             "type": "check-dates-bool",
@@ -511,58 +511,44 @@
     ],
     "parties": [
         {
-            "id": "party-conf",
+            "id": "conf-conf",
             "category": "Confiabilidad",
-            "name": "CONFIABILIDAD GLOBAL",
-            "type": "check-schema-bool"
+            "name": "CONFIABILIDAD GLOBAL"
         },
         {
-            "id": "party-conf-year",
-            "category": "Confiabilidad",
-            "name": "CONFIABILIDAD POR AÑOS",
-            "type": "check-schema-bool"
+            "id": "comp-aepm",
+            "category": "Competitividad",
+            "name": "AGENTE ECONOMICO PREPONDERANTE (MONTO)"
         },
         {
-            "id": "party-aepm",
-            "category": "Confiabilidad",
-            "name": "AGENTE ECONOMICO PREPONDERANTE (MONTO)",
-            "type": "check-schema-bool"
+            "id": "comp-aepc",
+            "category": "Competitividad",
+            "name": "AGENTE ECONOMICO PREPONDERANTE (CANTIDAD)"
         },
         {
-            "id": "party-aepc",
-            "category": "Confiabilidad",
-            "name": "AGENTE ECONOMICO PREPONDERANTE (CANTIDAD)",
-            "type": "check-schema-bool"
+            "id": "traz-trc",
+            "category": "Trazabilidad",
+            "name": "TITULO DE CONTRATO REPETIDO"
         },
         {
-            "id": "party-trc",
-            "category": "Confiabilidad",
-            "name": "TITULO DE CONTRATO REPETIDO",
-            "type": "check-schema-bool"
+            "id": "traz-mcr",
+            "category": "Trazabilidad",
+            "name": "MONTO DE CONTRATO REPETIDO"
         },
         {
-            "id": "party-mcr",
-            "category": "Confiabilidad",
-            "name": "MONTO DE CONTRATO REPETIDO",
-            "type": "check-schema-bool"
+            "id": "comp-celp",
+            "category": "Competitividad",
+            "name": "CONCENTRACION DE EXCEPCIONES A LICITACION PUBLICA"
         },
         {
-            "id": "party-celp",
-            "category": "Confiabilidad",
-            "name": "CONCENTRACION DE EXCEPCIONES A LICITACION PUBLICA",
-            "type": "check-schema-bool"
+            "id": "comp-rla",
+            "category": "Competitividad",
+            "name": "REBASA EL LIMITE ASIGNADO"
         },
         {
-            "id": "party-rla",
-            "category": "Confiabilidad",
-            "name": "REBASA EL LIMITE ASIGNADO",
-            "type": "check-schema-bool"
-        },
-        {
-            "id": "party-ncap",
-            "category": "Confiabilidad",
-            "name": "NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO",
-            "type": "check-schema-bool"
+            "id": "comp-ncap",
+            "category": "Competitividad",
+            "name": "NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO"
         }
     ]
 }
