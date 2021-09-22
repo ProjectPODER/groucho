@@ -125,6 +125,19 @@
             ]
         },
         {
+            "id": "temp-dl",
+            "category": "Temporalidad",
+            "name": "Duraciones Largas",
+            "type": "date-difference-bool",
+            "difference":{
+                "maximum": 1000
+            },
+            "fields":{
+                "from":"contracts.period.startDate",
+                "to": "contracts.period.endDate"
+            }
+        },        
+        {
             "id": "temp-fs",
             "category": "Temporalidad",
             "name": "Fechas Sospechosas",
@@ -330,15 +343,23 @@
                         "parties.roles": "supplier"
                     }
                 },
-                "tender.procurementMethod",
                 "planning.budget.amount.amount", "planning.budget.amount.currency",
                 "tender.procurementMethod", "tender.procurementMethodDetails", "tender.procurementMethodRationale", "tender.mainProcurementCategory"
             ]
         },
         {
-            "id": "comp-pf-beta",
+            "id": "comp-ep",
             "category": "Competitividad",
-            "name": "Paraísos Fiscales (falta actualizar listado de países)",
+            "name": "Estimación perfecta",
+            "type": "compare",
+            "fields": [
+                "planning.budget.amount.amount", "contracts.amount.value"
+            ]
+        },        
+        {
+            "id": "comp-edpapc",
+            "category": "Competitividad",
+            "name": "Empresas con domicilio en países con alta percepción de corrupción.",
             "type": "check-field-value-bool",
             "fields": ["parties.address.countryName"],
             "values": [
@@ -404,15 +425,6 @@
             ]
         },
         {
-            "id": "comp-ps-beta",
-            "category": "Trazabilidad",
-            "name": "Proveedor sancionado (falta dataset de valores)",
-            "type": "field-equality-bool",
-            "fields": [
-                "parties.name"
-            ]
-        },
-        {
             "id": "traz-cft",
             "category": "Trazabilidad",
             "name": "Campos Fundamentales para la Trazabilidad",
@@ -431,7 +443,12 @@
                         "parties.role": "buyer"
                     }
                 },
-                "parties.identifier.id",
+                {
+                    "value": "parties.identifier.id",
+                    "conditions": {
+                        "parties.roles": "supplier"
+                    }
+                },                
                 "tender.id",
                 "contract.id"
             ]
@@ -444,24 +461,34 @@
             "type": "check-fields-inverse"
         },
         {
+            "id": "traz-nap",
+            "category": "Trazabilidad",
+            "name": "Nombre atípico del proveedor",
+            "fields": ["parties.name"],
+            "type": "check-url-inverse"
+        },        
+        {
+            "id": "traz-cp",
+            "category": "Trazabilidad",
+            "name": "Consorcios pseudónimos",
+            "fields": [
+                {
+                    "value":"parties.identifier.id",
+                    "operation": {
+                        "substr":[0,2]
+                    }
+                }
+            ],
+            "values":["12"],            
+            "type": "check-field-value-bool"
+        },
+        {
             "id": "traz-ip-beta",
             "category": "Trazabilidad",
-            "name": "Dirección del proveedor (falta definir cómo se valida)",
+            "name": "Dirección del proveedor (falta definir cómo se valida) - Para proveedores de costa rica: 0.00: con pais, 0.25: pais y municipio, 0.50: pais, municipio y dirección, 1.00: dirección no es municpio.  Fuera de costarrica. 0: sin dirección, 1: con dirección",
             "fields": [
                 "parties.address"
             ],
-            "type": "check-fields-bool"
-        },
-        {
-            "id": "traz-pf-beta",
-            "category": "Trazabilidad",
-            "name": "Proveedor Fantasma (se revisa contra dataset auxiliar)",
-            "fields": [{
-                "value": "parties.identifier.id",
-                "conditions": {
-                    "parties.roles": "supplier"
-                }
-            }],
             "type": "check-fields-bool"
         },
         {
