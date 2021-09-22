@@ -24,7 +24,7 @@
         {
             "id": "trans-cccr",
             "category": "Transparencia",
-            "name": "Campos completos Costaricenses (falta definir campos)",
+            "name": "Campos completos Costaricenses",
             "type": "check-fields-rate",
             "fields": [
                "awards.id",
@@ -127,7 +127,7 @@
         {
             "id": "temp-dl",
             "category": "Temporalidad",
-            "name": "Duraciones Largas",
+            "name": "Duraciones largas",
             "type": "date-difference-bool",
             "difference":{
                 "maximum": 1000
@@ -312,7 +312,7 @@
             ]
         },
         {
-            "id": "temp-fp-beta",
+            "id": "temp-fp",
             "category": "Temporalidad",
             "name": "Fechas en el pasado (varía por dataset)",
             "type": "date-difference-bool",
@@ -343,8 +343,8 @@
                         "parties.roles": "supplier"
                     }
                 },
-                "planning.budget.amount.amount", "planning.budget.amount.currency",
-                "tender.procurementMethod", "tender.procurementMethodDetails", "tender.procurementMethodRationale", "tender.mainProcurementCategory"
+                    "planning.budget.amount.amount", "planning.budget.amount.currency",
+                    "tender.procurementMethod", "tender.procurementMethodDetails", "tender.procurementMethodRationale", "tender.mainProcurementCategory"
             ]
         },
         {
@@ -485,7 +485,8 @@
         {
             "id": "traz-ip-beta",
             "category": "Trazabilidad",
-            "name": "Dirección del proveedor (falta definir cómo se valida) - Para proveedores de costa rica: 0.00: con pais, 0.25: pais y municipio, 0.50: pais, municipio y dirección, 1.00: dirección no es municpio.  Fuera de costarrica. 0: sin dirección, 1: con dirección",
+            "name": "Dirección del proveedor",
+            "//comment": " - Para proveedores de costa rica: 0.00: con pais, 0.25: pais y municipio, 0.50: pais, municipio y dirección, 1.00: dirección no es municpio.  Fuera de costarrica. 0: sin dirección, 1: con dirección",
             "fields": [
                 "parties.address"
             ],
@@ -545,37 +546,46 @@
         {
             "id": "comp-aepm",
             "category": "Competitividad",
-            "name": "AGENTE ECONOMICO PREPONDERANTE (MONTO)"
+            "name": "AGENTE ECONOMICO PREPONDERANTE (MONTO)",
+            "limit": 0.5
         },
         {
             "id": "comp-aepc",
             "category": "Competitividad",
-            "name": "AGENTE ECONOMICO PREPONDERANTE (CANTIDAD)"
+            "name": "AGENTE ECONOMICO PREPONDERANTE (CANTIDAD)",
+            "limit": 0.5
         },
         {
             "id": "traz-trc",
             "category": "Trazabilidad",
-            "name": "TITULO DE CONTRATO REPETIDO"
+            "name": "TITULO DE CONTRATO REPETIDO",
+            "limit": 10,
+            "minimum_contract_count": 10
         },
         {
             "id": "traz-mcr",
             "category": "Trazabilidad",
-            "name": "MONTO DE CONTRATO REPETIDO"
+            "name": "MONTO DE CONTRATO REPETIDO",
+            "limit": 10,
+            "minimum_contract_count": 10
         },
         {
             "id": "comp-celp",
             "category": "Competitividad",
-            "name": "CONCENTRACION DE EXCEPCIONES A LICITACION PUBLICA"
+            "name": "CONCENTRACION DE EXCEPCIONES A LICITACION PUBLICA",
+            "limit": 0.33
         },
         {
             "id": "comp-rla",
             "category": "Competitividad",
-            "name": "REBASA EL LIMITE ASIGNADO"
+            "name": "REBASA EL LIMITE ASIGNADO",
+            "limit": 0.3
         },
         {
             "id": "comp-ncap",
             "category": "Competitividad",
-            "name": "NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO"
+            "name": "NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO",
+            "limit": 3
         }
     ]
 }
