@@ -391,46 +391,82 @@
             "type": "check-url-bool"
         }
     ],
+
     "parties": [
         {
-            "id": "conf-conf",
+            "id": "conf-index",
             "category": "Confiabilidad",
-            "name": "CONFIABILIDAD GLOBAL"
+            "name": "CONFIABILIDAD GLOBAL",
+            "type": "reliability",
+            "fields": "total_score"
         },
         {
             "id": "comp-aepm",
             "category": "Competitividad",
-            "name": "AGENTE ECONOMICO PREPONDERANTE (MONTO)"
+            "name": "AGENTE ECONOMICO PREPONDERANTE (MONTO)",
+            "limit": [0.2, 0.3, 0.5],
+            "type": "limited-party-summer-percent",
+            "fields": "contract.value.amount" 
         },
         {
             "id": "comp-aepc",
             "category": "Competitividad",
-            "name": "AGENTE ECONOMICO PREPONDERANTE (CANTIDAD)"
+            "name": "AGENTE ECONOMICO PREPONDERANTE (CANTIDAD)",
+            "limit": [0.2, 0.3, 0.5],
+            "type": "limited-party-accumulator-percent",
+            "fields": "id"
         },
         {
             "id": "traz-trc",
             "category": "Trazabilidad",
-            "name": "TITULO DE CONTRATO REPETIDO"
+            "name": "TITULO DE CONTRATO REPETIDO",
+            "limit": [5,10,15],
+            "minimum_contract_count": 10,
+            "type": "limited-accumulator-percent",
+            "fields": "contract.title"
         },
         {
             "id": "traz-mcr",
             "category": "Trazabilidad",
-            "name": "MONTO DE CONTRATO REPETIDO"
+            "name": "MONTO DE CONTRATO REPETIDO",
+            "limit": [5,10,15],
+            "minimum_contract_count": 10,
+            "type": "limited-accumulator-percent",
+            "fields": "contract.value.amount"
+        },
+        {
+            "id": "traz-cd",
+            "category": "Trazabilidad",
+            "name": "Cédula dupicada",
+            "limit": 1,
+            "type": "limited-party-accumulator-count",
+            "fields": "parties.identifier.id"
+        },        
+        {
+            "id": "comp-ncap",
+            "category": "Competitividad",
+            "name": "NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO",
+            "limit": [3,5,10],
+            "fields": "startDate",
+            "type": "limited-accumulator-percent"
         },
         {
             "id": "comp-celp",
             "category": "Competitividad",
-            "name": "CONCENTRACION DE EXCEPCIONES A LICITACION PUBLICA"
+            "name": "CONCENTRACION DE EXCEPCIONES A LICITACION PUBLICA",
+            "type": "missing-definition"
         },
         {
             "id": "comp-rla",
             "category": "Competitividad",
-            "name": "REBASA EL LIMITE ASIGNADO"
+            "name": "REBASA EL LIMITE ASIGNADO",
+            "type": "missing-definition"
         },
         {
             "id": "comp-ncap",
             "category": "Competitividad",
-            "name": "NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO"
+            "name": "NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO",
+            "type": "missing-definition"
         }
     ]
 }

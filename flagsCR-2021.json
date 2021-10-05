@@ -672,7 +672,7 @@
             "category": "Confiabilidad",
             "name": "CONFIABILIDAD GLOBAL",
             "type": "reliability",
-            "field": "total_score"
+            "fields": "total_score"
         },
         {
             "id": "comp-aepm",
@@ -680,7 +680,7 @@
             "name": "AGENTE ECONOMICO PREPONDERANTE (MONTO)",
             "limit": [0.2, 0.3, 0.5],
             "type": "limited-party-summer-percent",
-            "field": "contract.value.amount" 
+            "fields": "contract.value.amount" 
         },
         {
             "id": "comp-aepc",
@@ -688,7 +688,7 @@
             "name": "AGENTE ECONOMICO PREPONDERANTE (CANTIDAD)",
             "limit": [0.2, 0.3, 0.5],
             "type": "limited-party-accumulator-percent",
-            "field": "id"
+            "fields": "id"
         },
         {
             "id": "traz-trc",
@@ -697,7 +697,7 @@
             "limit": [5,10,15],
             "minimum_contract_count": 10,
             "type": "limited-accumulator-percent",
-            "field": "contract.title"
+            "fields": "contract.title"
         },
         {
             "id": "traz-mcr",
@@ -706,7 +706,7 @@
             "limit": [5,10,15],
             "minimum_contract_count": 10,
             "type": "limited-accumulator-percent",
-            "field": "contract.value.amount"
+            "fields": "contract.value.amount"
         },
         {
             "id": "traz-cd",
@@ -714,14 +714,14 @@
             "name": "Cédula dupicada",
             "limit": 1,
             "type": "limited-party-accumulator-count",
-            "field": "parties.identifier.id"
+            "fields": "parties.identifier.id"
         },        
         {
             "id": "comp-ncap",
             "category": "Competitividad",
             "name": "NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO",
             "limit": [3,5,10],
-            "field": "startDate",
+            "fields": "startDate",
             "type": "limited-accumulator-percent"
         }
     ]
