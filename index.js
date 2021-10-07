@@ -51,7 +51,7 @@ if(args.mode == 'contracts') {
         .pipe(JSONStream.parse())
         .pipe(es.mapSync(function (doc) {
             let evals = evaluateFromStream(doc);
-            evals.map( (e) => { process.stdout.write(JSON.stringify(e)) + '\n' } )
+            evals.map( (e) => { process.stdout.write(JSON.stringify(e) + '\n') } )
         }))
 
     process.stdin.on('end', () => {
@@ -133,7 +133,7 @@ function evaluateParties(client) {
 
                 if(parties % chunkSize == 0 || parties >= arrayLength) {
                     let party_flags = getPartyNodeSummary(partyChunk, nodeScores);
-                    
+
                     party_flags.map(party_flag => {
                         //TODO: Check duplicated output
                         console.log(JSON.stringify(party_flag));
@@ -144,7 +144,7 @@ function evaluateParties(client) {
             }
             console.log('Seen parties:', parties);
 
-            
+
         } )
         .then( () => {
             console.timeEnd('duration');
@@ -166,7 +166,7 @@ async function getContractFlags(client,orgTree,query,batch_size,hit_count) {
         }
     }
 
-    const scrollSearch = client.helpers.scrollSearch(params)        
+    const scrollSearch = client.helpers.scrollSearch(params)
 
     console.log('Scrolling contract_flags from elastic...',params);
 
@@ -189,7 +189,7 @@ async function getContractFlags(client,orgTree,query,batch_size,hit_count) {
             hit_count++;
             if (args.limit) {
                 console.log("hit",hit_count,args.limit|"");
-            }                
+            }
             if (hit_count >= args.limit) {
                 // console.log("Reached hit limit",args.limit);
                 break
@@ -207,7 +207,7 @@ async function getContractFlags(client,orgTree,query,batch_size,hit_count) {
 
             // console.log("orgTree",orgTree);
 
-            contractEvaluations = contractEvaluations.concat(getContractCriteriaSummary([evaluation], flagCriteriaObj,flags.ruleset_id));            
+            contractEvaluations = contractEvaluations.concat(getContractCriteriaSummary([evaluation], flagCriteriaObj,flags.ruleset_id));
         }
 
         //Todo: Clear scroll
@@ -226,7 +226,7 @@ function connect(callback) {
 
     //We are using self-signed certificaes for elastic
     const client = new Client({ node: elasticNode, ssl: { rejectUnauthorized: false }, resurrectStrategy: "none", compression: "gzip" });
-        
+
     function elastic_test(retry=0) {
       console.log("Testing elastic connnection",retry)
 
@@ -240,12 +240,12 @@ function connect(callback) {
         if (retry < 3) {
           console.log("Retry elastic");
           setTimeout(() => {
-    
+
             elastic_test(retry+1)
           },5000*(retry+1))
         }
         else {
-    
+
           console.error("Error connecting to elastic node:",elasticNode,e);
           if (e.meta && e.meta.body && e.meta.body.error) {
             console.error("Error body", e.meta.body.error);
@@ -254,7 +254,7 @@ function connect(callback) {
         }
       })
     }
-    
+
     elastic_test();
 }
 

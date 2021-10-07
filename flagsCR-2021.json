@@ -136,16 +136,13 @@
                 "from":"contracts.period.startDate",
                 "to": "contracts.period.endDate"
             }
-        },        
+        },
         {
             "id": "temp-fs",
             "category": "Temporalidad",
             "name": "Fechas Sospechosas",
             "type": "check-dates-bool",
             "fields": [
-                "awards.date",
-                "tender.tenderPeriod.endDate",
-                "tender.tenderPeriod.startDate",
                 "contracts.dateSigned",
                 "contracts.period.startDate"
             ],
@@ -299,7 +296,7 @@
                 "2021-09-13",
                 "2021-11-29",
                 "2021-12-25"
-                
+
             ]
         },
         {
@@ -307,29 +304,39 @@
             "category": "Temporalidad",
             "name": "Fecha de firma en el futuro",
             "type": "date-difference-bool",
-            "fields": [
-                "contracts.dateSigned"
-            ]
+            "difference":{
+                "maximum": 0
+            },
+            "fields":{
+                "from":"contracts.period.endDate",
+                "to": "contracts.dateSigned"
+            }
         },
         {
             "id": "temp-fp",
             "category": "Temporalidad",
             "name": "Fechas en el pasado (varía por dataset)",
             "type": "date-difference-bool",
-            "fields": [
-                "contracts.dateSigned",
-                "contracts.period.startDate"
-            ]
+            "difference":{
+                "maximum": 0
+            },
+            "fields": {
+                "from": "contracts.dateSigned",
+                "to": "contracts.period.startDate"
+            }
         },
         {
             "id": "temp-fpn",
             "category": "Temporalidad",
             "name": "Fecha de firma previa a fecha de notificación",
             "type": "date-difference-bool",
-            "fields": [
-                "contracts.dateSigned",
-                "contracts.period.startDate"
-            ]
+            "difference":{
+                "maximum": 0
+            },
+            "fields": {
+                "from": "contracts.dateSigned",
+                "to": "contracts.period.startDate"
+            }
         },
         {
             "id": "comp-cfc",
@@ -351,11 +358,11 @@
             "id": "comp-ep",
             "category": "Competitividad",
             "name": "Estimación perfecta",
-            "type": "compare",
+            "type": "field-inequality-bool",
             "fields": [
-                "planning.budget.amount.amount", "contracts.amount.value"
+                "planning.budget.amount.amount", "contracts.value.amount"
             ]
-        },        
+        },
         {
             "id": "comp-edpapc",
             "category": "Competitividad",
@@ -373,7 +380,6 @@
                 "Italia",
                 "Nicaragua",
                 "Venezuela"
-                
             ]
         },
         {
@@ -387,13 +393,7 @@
                     "conditions": {
                         "parties.roles": "supplier"
                     }
-                },
-                {
-                    "value":"parties.name",
-                    "conditions": {
-                        "parties.roles": "buyer"
-                    }
-                }                
+                }
             ],
             "values": [
                 "ACADEMIA NACIONAL DE CIENCIAS",
@@ -540,10 +540,9 @@
                 "FONDO DE INVERSION DE DESARROLLO DE PROYECTOS BN I",
                 "FID 1065 CONTRATO DE FIDEICOMISO ICODER Y EL BNCR, PARA LA GESTION Y ADMINISTRACION DEL ESTADIO NACIONAL Y SUS INSTALACIONES",
                 "Fondo de Inversion Popular Inmobiliario (FINPO INMOBILIARIO)",
-                "BCR FONDO DE INVERSIÓN INMOBILIARIO DEL COMERCIO Y LA INDUSTRIA FCI"                
+                "BCR FONDO DE INVERSIÓN INMOBILIARIO DEL COMERCIO Y LA INDUSTRIA FCI"
             ]
-        },        
-        
+        },
         {
             "id": "traz-cft",
             "category": "Trazabilidad",
@@ -568,7 +567,7 @@
                     "conditions": {
                         "parties.roles": "supplier"
                     }
-                },                
+                },
                 "tender.id",
                 "contract.id"
             ]
@@ -577,7 +576,7 @@
             "id": "traz-mc",
             "category": "Trazabilidad",
             "name": "Modificaciones al Contrato",
-            "fields": ["contracts.amendments"],
+            "fields": ["contracts.hasAmendments"],
             "type": "check-fields-inverse"
         },
         {
@@ -586,7 +585,7 @@
             "name": "Nombre atípico del proveedor",
             "fields": ["parties.name"],
             "type": "check-url-inverse"
-        },        
+        },
         {
             "id": "traz-cp",
             "category": "Trazabilidad",
@@ -599,7 +598,7 @@
                     }
                 }
             ],
-            "values":["12"],            
+            "values":["12"],
             "type": "check-field-value-bool"
         },
         {
@@ -653,7 +652,7 @@
             "id": "comp-efr",
             "category": "Trazabilidad",
             "name": "Estimación fuera de rango",
-            "fields": ["contracts.amount.value", "planning.budget"],
+            "fields": ["contracts.value.amount", "planning.budget.amount.amount"],
             "type": "check-field-value-range",
             "range": 0.2
         },
@@ -661,9 +660,9 @@
             "id": "traz-mem",
             "category": "Trazabilidad",
             "name": "Monto mal estimado",
-            "fields": ["contracts.amount.value"],
-            "type": "check-field-value",
-            "values": [0,1] 
+            "fields": ["planning.budget.amount.amount"],
+            "type": "check-field-value-bool",
+            "values": [0,1]
         }
     ],
     "parties": [
@@ -680,7 +679,7 @@
             "name": "AGENTE ECONOMICO PREPONDERANTE (MONTO)",
             "limit": [0.2, 0.3, 0.5],
             "type": "limited-party-summer-percent",
-            "fields": "contract.value.amount" 
+            "fields": "contract.value.amount"
         },
         {
             "id": "comp-aepc",
@@ -715,7 +714,7 @@
             "limit": 1,
             "type": "limited-party-accumulator-count",
             "fields": "parties.identifier.id"
-        },        
+        },
         {
             "id": "comp-ncap",
             "category": "Competitividad",

@@ -49,7 +49,9 @@ function getFlagScore(contract, flag) {
         case 'date-difference-bool':
             return dateDifferenceFlag(contract, flag.fields, flag.difference);
         case 'field-equality-bool':
-            return checkFieldsComparisonFlag(contract, flag.fields);
+            return checkFieldsComparisonFlag(contract, flag.fields, 0);
+        case 'field-inequality-bool':
+            return checkFieldsComparisonFlag(contract, flag.fields, 1);
     }
 }
 
@@ -149,14 +151,13 @@ function evaluateFlags(record, flags, flagCollectionObj) {
             if(role == 'buyer') {
                 // Get the parent (Dependencia)
                 if ( party.hasOwnProperty('memberOf') ) {
-                  var dependencyObj = {
-                    id: party.memberOf[0].id,
-                    entity: 'dependency'
-                  }
-                  contratoParties.push(dependencyObj);
+                    var dependencyObj = {
+                        id: party.memberOf[0].id,
+                        entity: 'dependency'
+                    }
+                    contratoParties.push(dependencyObj);
+                    Object.assign( partyObj, { parent: { id: party.memberOf[0].id } } );
                 }
-
-                Object.assign( partyObj, { parent: { id: party.memberOf[0].id } } );
 
                 // If the govLevel is "region", extract the state
                 // If the govLevel is "city", extract the municipality and the state
@@ -192,7 +193,7 @@ function evaluateFlags(record, flags, flagCollectionObj) {
         } );
 
         // Iterate flags
-        flags.contract.map( (flag) => {
+        flags.map( (flag) => {
             let flagScore = getFlagScore(contract, flag);
             contratoFlags.flags[flag.categoryID][flag.id].push({ year: year, score: flagScore });
         } );
@@ -222,13 +223,13 @@ function evaluateNodeFlags(roots, nodeScores, flags) {
         }
 
         // console.log("supplierIDs",supplierIDs);
-        
+
         evaluateNode([ucID],nodeScores,flags,supplierIDs, branch);
         if (dependenciaID) {
             evaluateNode([dependenciaID],nodeScores,flags,supplierIDs, branch);
         }
         evaluateNode(supplierIDs,nodeScores,flags,supplierIDs, branch);
-        
+
         // console.log("evaluateNodeFlags",nodeScores);
 
         // Cleanup...
@@ -263,7 +264,7 @@ function evaluateNode(nodeIDs,nodeScores,flags,supplierIDs,branch) {
 
                 // console.log("evaluateNode",nodeScores[nodeID]);
                 //Add value to years
-                
+
                 //Is this year already added to the nodeScores for this node?
                 let yearValue = {}
                 let currentYear = null;
@@ -316,12 +317,12 @@ function getNodeFlagScore(nodeScores, flag, supplierIDs,branch,year) {
         case "limited-party-accumulator-count":
             // "id": "traz-cd",
             return limitedPartyAccumulatorCount(branch,year,flag.field,flag.limit,flag.minimum_contract_count)
-                
+
         case "limited-party-accumulator-percent":
             // "id": "comp-aepc",
                 // return predominantEconomicAgentCount(branch,year,flag.field,flag.limit)
             return limitedPartyAccumulatorPercent(branch,year,flag.field,flag.limit,flag.minimum_contract_count);
-        
+
 
         case "limited-party-summer-percent":
             // "id": "comp-aepm",
@@ -396,7 +397,7 @@ function limitedAccumulatorPercent(branch,year,flag_field,flag_limit, minimum_co
     }
     // if(!seen) mcr10_acc++;
 
-    return result.score;    
+    return result.score;
 }
 
 function limitedPartyAccumulatorCount(branch,year,flag_field,flag_limit, minimum_contract_count) {
@@ -422,11 +423,11 @@ function limitedPartyAccumulatorCount(branch,year,flag_field,flag_limit, minimum
         // if(!seen) aepc_acc++;
 
     }
-    return result.score;    
+    return result.score;
 }
 
 function limitedPartyAccumulatorPercent(branch,year,flag_field,flag_limit, minimum_contract_count) {
-    // return predominantEconomicAgentCount(branch,year,flag_field,flag_limit) 
+    // return predominantEconomicAgentCount(branch,year,flag_field,flag_limit)
     let aepc_threshhold = flag_limit; // More than aepm_threshhold % of contract amounts to same supplier
 
     //TODO: Use flag_field
@@ -449,7 +450,7 @@ function limitedPartyAccumulatorPercent(branch,year,flag_field,flag_limit, minim
         // if(!seen) aepc_acc++;
     }
 
-    return result.score;    
+    return result.score;
 }
 
 function limitedPartySummerPercent(branch,year,flag_field,flag_limit,minimum_contract_count) {
@@ -474,7 +475,7 @@ function limitedPartySummerPercent(branch,year,flag_field,flag_limit,minimum_con
         } );
     }
 
-    return score_object.score;    
+    return score_object.score;
 }
 
 
@@ -533,7 +534,7 @@ function yearlyReliability_____NOSE() {
         } );
 
         let seen = false;
-    }    
+    }
 }
 
 // ---------- AGENTE ECONOMICO PREPONDERANTE (MONTO) ----------
@@ -778,7 +779,7 @@ module.exports = { evaluateFlags, evaluateNodeFlags };
 
 
 
-        
+
 
         // Promedios globales por banderas de nodo para la UC
         // nodeScores[ucID].nodeScore.aepm = aepm_acc / years_seen;

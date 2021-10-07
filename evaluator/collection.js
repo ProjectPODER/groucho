@@ -112,9 +112,9 @@ function getContractCriteriaSummary(collection, criteriaObj, ruleset_id) {
     let tempCriteriaObj = JSON.stringify(criteriaObj);
 
     collection.map( (evaluation) => {
-        let item = evaluation;
+        let item = evaluation.contratoFlags;
         let contractFlagObj = {
-            id: item.id,
+            id: item.ocid + '-' + item.id,
             ocid: item.ocid,
             ruleset_id: ruleset_id,
             date_signed: item.hasOwnProperty('date_signed')? item.date_signed : null,
@@ -127,14 +127,14 @@ function getContractCriteriaSummary(collection, criteriaObj, ruleset_id) {
         Object.assign(contractFlagObj, { rules_score: {} });
 
         // Iterate flag categories
-        Object.keys(item.rules_score).map( function(categoria, index) {
+        Object.keys(item.flags).map( function(categoria, index) {
             var flagCount = 0;
             contractFlagObj.rules_score[categoria] = {};
 
             // Iterate flags
-            Object.keys(item.rules_score[categoria]).map( function(bandera, subindex) {
-                contractFlagObj.rules_score[categoria][bandera] = item.rules_score[categoria][bandera];
-                contractFlagObj.contract_score[categoria] += item.rules_score[categoria][bandera];
+            Object.keys(item.flags[categoria]).map( function(bandera, subindex) {
+                contractFlagObj.rules_score[categoria][bandera] = item.flags[categoria][bandera][0].score;
+                contractFlagObj.contract_score[categoria] += item.flags[categoria][bandera][0].score || 0;
                 flagCount++;
             } );
 
@@ -278,7 +278,7 @@ function getPartyNodeSummary(collection, nodeScores) {
                     category_acc[category]={
                         value: 0,
                         count: 0
-                    } 
+                    }
                 }
                 category_acc[category].value += node_score.node_rules[rule];
                 category_acc[category].count++;
@@ -287,7 +287,7 @@ function getPartyNodeSummary(collection, nodeScores) {
                 let category = Object.keys(category_acc)[category_index];
                 item.node_categories[category]=category_acc[category].value / category_acc[category].count;
             }
-            
+
             //TODO: Hardcoded category names
             item.node_categories.total_score = (item.node_categories.comp + item.node_categories.traz) / 2 ;
 
@@ -309,7 +309,7 @@ function getPartyNodeSummary(collection, nodeScores) {
                         year_node_scores_sum += node_score.years[year.year].node_rules[x];
                         year_node_scores_count++;
                     } );
-                    let year_node_total_score = year_node_scores_sum / year_node_scores_count;                
+                    let year_node_total_score = year_node_scores_sum / year_node_scores_count;
                     Object.assign( node_score.years[year.year].node_rules, { 'total_score': year_node_total_score } );
                     Object.assign( year, { 'node_rules': node_score.years[year.year].node_rules } );
                 }

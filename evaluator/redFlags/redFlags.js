@@ -348,7 +348,8 @@ function checkDatesFlag(contract, fields, values) {
 // Parameters:
 //      contract: the document to evaluate
 //      fields: array of fields to compare the values of
-function checkFieldsComparisonFlag(contract, fields) {
+//      direction: 0 for equality, 1 for inequality
+function checkFieldsComparisonFlag(contract, fields, direction) {
     var values = [];
     fields.map( (field) => {
         var tempObj = contract;
@@ -365,10 +366,10 @@ function checkFieldsComparisonFlag(contract, fields) {
 
     var uniques = makeUnique(values);
     if(uniques.length == 1) {
-        return 1;
+        return 1 - direction;
     }
     else {
-        return 0;
+        return direction;
     }
 }
 
@@ -445,16 +446,22 @@ function checkFieldsValueFlag(contract, fields, values) {
                 if(fieldValue.length > 0) {
                     // Iterate over the found values for the field
                     fieldValue.map( (itemValue) => {
-                        switch( Object.keys(field.operation)[0] ) { // Apply a predefined function over the field value
-                            case 'substr':
-                                var operatedValue = itemValue.toString().substr(field.operation.substr[0]);
-                                // Iterate over values to compare with the field values
-                                values.map( (value) => {
-                                    if(value == operatedValue) { // A match is found...
-                                        foundValue = true;
-                                    }
-                                } );
-                                break;
+                        if(field.hasOwnProperty('operation')) {
+                            switch( Object.keys(field.operation)[0] ) { // Apply a predefined function over the field value
+                                case 'substr':
+                                    var operatedValue = itemValue.toString().substr(...field.operation.substr);
+                                    // Iterate over values to compare with the field values
+                                    values.map( (value) => {
+                                        if(value == operatedValue) { // A match is found...
+                                            foundValue = true;
+                                        }
+                                    } );
+                                    break;
+                            }
+                        }
+                        else if(field.hasOwnProperty('conditions')) {
+                            // console.log(field.conditions, field.value);
+                            // console.log(evaluateConditions(contract, field.conditions, field.value));
                         }
                     } );
                 }
@@ -561,7 +568,8 @@ function dateDifferenceFlag(contract, fields, difference) {
 
     start = new Date(start.split('T')[0]);
     end = new Date(end.split('T')[0]);
-    var timeDifference = Math.abs(end.getTime() - start.getTime());
+    // var timeDifference = Math.abs(end.getTime() - start.getTime()); why have absolute difference if there is a to and a from?
+    var timeDifference = end.getTime() - start.getTime();
     var daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
 
     var conditionType = Object.keys(difference)[0];

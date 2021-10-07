@@ -26,7 +26,7 @@ function parseFlags(file) {
 
     // Build rulesObj
     let rulesArr = {
-        ruleset_id: flags.ruleset_id,
+        ruleset_id: flags.id,
         contract_rules: [],
         party_rules: []
     };
