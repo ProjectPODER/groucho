@@ -67,7 +67,7 @@ function fieldPathExists(field, tempObj) {
             if(i < fieldPath.length - 1) { // Arrived at a string or number while end of path has not been reached
                 return fieldValues;
             }
-            if(tempObj[fieldPath[i]] == '' || tempObj[fieldPath[i]] == '---' || tempObj[fieldPath[i]] == 'null') { // Arrived at empty string, '---' or 'null'
+            if(!isNumeric(tempObj[fieldPath[i]]) && (tempObj[fieldPath[i]] == '' || tempObj[fieldPath[i]] == '---' || tempObj[fieldPath[i]] == 'null')) { // Arrived at empty string, '---' or 'null'
                 return fieldValues;
             }
             fieldValues.push( tempObj[fieldPath[i]] );
@@ -84,6 +84,7 @@ function fieldPathExists(field, tempObj) {
             tempObj = tempObj[fieldPath[i]];
         }
         else { // None of the above...
+            fieldValues.push(tempObj[fieldPath[i]]);
             return fieldValues;
         }
     }
@@ -445,7 +446,7 @@ function checkFieldsValueFlag(contract, fields, values) {
                 var fieldValue = fieldPathExists(field.value, contract);
                 if(fieldValue.length > 0) {
                     // Iterate over the found values for the field
-                    fieldValue.map( (itemValue) => {
+                    fieldValue.map( (itemValue, i) => {
                         if(field.hasOwnProperty('operation')) {
                             switch( Object.keys(field.operation)[0] ) { // Apply a predefined function over the field value
                                 case 'substr':
@@ -460,8 +461,25 @@ function checkFieldsValueFlag(contract, fields, values) {
                             }
                         }
                         else if(field.hasOwnProperty('conditions')) {
-                            // console.log(field.conditions, field.value);
-                            // console.log(evaluateConditions(contract, field.conditions, field.value));
+                            Object.keys(field.conditions).map( (condition, index) => {
+                                var conditionField = condition;
+                                var conditionValue = field.conditions[conditionField];
+                                var conditionResults = fieldPathExists( conditionField, contract );
+                                var conditionIndex = -1;
+                                if(conditionResults.length > 0) {
+                                    conditionResults.map( (result, j) => {
+                                        if(result == conditionValue) conditionIndex = j;
+                                    } );
+                                    if(i == conditionIndex) {
+                                        // Iterate over values to compare with the field values
+                                        values.map( (value) => {
+                                            if(value == fieldValue[conditionIndex]) { // A match is found...
+                                                foundValue = true;
+                                            }
+                                        } );
+                                    }
+                                }
+                            } );
                         }
                     } );
                 }
@@ -524,6 +542,9 @@ function checkUrlFieldFlag(contract, field) {
             if( validUrl.isUri(url) ) {
                 found = true;
             }
+            else if( url.match(/^(www|http)s?.*$/) ) { // Try other forms of url that may not be valid
+                found = true;
+            }
         } );
         return (found)? 1 : 0;
     }
@@ -531,6 +552,16 @@ function checkUrlFieldFlag(contract, field) {
         return 0;
     }
 }
+
+// Type: check-url-inverse
+// Description: check that a field is NOT a valid URL
+// Parameters:
+//      contract: the document to evaluate
+//      field: the field that should contain the URL
+function checkNotUrlFieldFlag(contract, field) {
+    return 1 - checkUrlFieldFlag(contract, field);
+}
+
 
 // Type: date-difference-bool
 // Description: calculates the difference in days between two dates
@@ -608,5 +639,6 @@ module.exports = {
     checkSchemaFlag,
     checkSectionsFlag,
     checkUrlFieldFlag,
+    checkNotUrlFieldFlag,
     dateDifferenceFlag,
 };

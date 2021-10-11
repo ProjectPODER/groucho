@@ -350,8 +350,8 @@
                         "parties.roles": "supplier"
                     }
                 },
-                    "planning.budget.amount.amount", "planning.budget.amount.currency",
-                    "tender.procurementMethod", "tender.procurementMethodDetails", "tender.procurementMethodRationale", "tender.mainProcurementCategory"
+                "planning.budget.amount.amount", "planning.budget.amount.currency",
+                "tender.procurementMethod", "tender.procurementMethodDetails", "tender.procurementMethodRationale", "tender.mainProcurementCategory"
             ]
         },
         {
@@ -559,7 +559,7 @@
                 {
                     "value": "parties.name",
                     "conditions": {
-                        "parties.role": "buyer"
+                        "parties.roles": "buyer"
                     }
                 },
                 {
@@ -569,7 +569,7 @@
                     }
                 },
                 "tender.id",
-                "contract.id"
+                "contracts.id"
             ]
         },
         {
@@ -583,7 +583,7 @@
             "id": "traz-nap",
             "category": "Trazabilidad",
             "name": "Nombre atípico del proveedor",
-            "fields": ["parties.name"],
+            "fields": "parties.name",
             "type": "check-url-inverse"
         },
         {

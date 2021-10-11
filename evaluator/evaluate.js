@@ -9,6 +9,7 @@ const {
     checkSchemaFlag,
     checkSectionsFlag,
     checkUrlFieldFlag,
+    checkNotUrlFieldFlag,
     dateDifferenceFlag
 } = require('./redFlags/redFlags');
 const laundry = require('company-laundry');
@@ -44,6 +45,8 @@ function getFlagScore(contract, flag) {
             return checkSectionsFlag(contract, flag.fields);
         case 'check-url-bool':
             return checkUrlFieldFlag(contract, flag.fields);
+        case 'check-url-inverse':
+            return checkNotUrlFieldFlag(contract, flag.fields);
         case 'comprensibility':
             return checkComprensibilityFlag(contract, flag.fields);
         case 'date-difference-bool':
@@ -195,6 +198,7 @@ function evaluateFlags(record, flags, flagCollectionObj) {
         // Iterate flags
         flags.map( (flag) => {
             let flagScore = getFlagScore(contract, flag);
+            console.log(flag.id, flagScore);
             contratoFlags.flags[flag.categoryID][flag.id].push({ year: year, score: flagScore });
         } );
 
