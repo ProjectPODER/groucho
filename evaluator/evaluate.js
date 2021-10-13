@@ -134,8 +134,9 @@ function evaluateFlags(record, flags, flagCollectionObj) {
         delete contratoFlags.name;
         delete contratoFlags.entity;
 
-        Object.assign(contratoFlags, { id: contract.contracts[0].id });
+        Object.assign(contratoFlags, { contract_id: contract.contracts[0].id });
         Object.assign(contratoFlags, { ocid: contract.ocid });
+        Object.assign(contratoFlags, { id: contract.id });
         Object.assign(contratoFlags, { value: contract.contracts[0].value });
 
         if( contract.contracts[0].hasOwnProperty('period') ) {

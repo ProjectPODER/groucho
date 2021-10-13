@@ -114,7 +114,7 @@ function getContractCriteriaSummary(collection, criteriaObj, ruleset_id) {
     collection.map( (evaluation) => {
         let item = evaluation.contratoFlags;
         let contractFlagObj = {
-            id: item.ocid + '-' + item.id,
+            id: item.id + '-' + item.contract_id,
             ocid: item.ocid,
             ruleset_id: ruleset_id,
             date_signed: item.hasOwnProperty('date_signed')? item.date_signed : null,
