@@ -5,6 +5,7 @@ const {
     checkFieldsComparisonFlag,
     checkFieldsFlag,
     checkFieldsValueFlag,
+    checkFieldValueRangeFlag,
     checkNotFieldsFlag,
     checkSchemaFlag,
     checkSectionsFlag,
@@ -35,6 +36,8 @@ function getFlagScore(contract, flag) {
             return checkDatesFlag(contract, flag.fields, flag.values);
         case 'check-field-value-bool':
             return checkFieldsValueFlag(contract, flag.fields, flag.values);
+        case 'check-field-value-range':
+            return checkFieldValueRangeFlag(contract, flag.fields, flag.range);
         case 'check-fields-bool':
             return checkFieldsFlag(contract, flag.fields);
         case 'check-fields-inverse':

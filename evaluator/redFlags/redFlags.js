@@ -492,6 +492,38 @@ function checkFieldsValueFlag(contract, fields, values) {
     }
 }
 
+// Type: check-field-value-range
+// Description: check that a field is within a certain range of another field (numerical)
+// Parameters:
+//      contract: the document to evaluate
+//      fields: array of fields to compare to each other
+//      range: numerical range to compare field values
+function checkFieldValueRangeFlag(contract, fields, range) {
+    // Check correct spec
+    if(fields.length < 2) return 0;
+
+    var values = [];
+    // Get field values if they are numbers, else ignore them
+    fields.map( f => {
+        var fieldValue = fieldPathExists(f, contract);
+        fieldValue.map( value => {
+            if(typeof value === 'number') values.push(value);
+        } );
+    } );
+
+    // Check that there are at least 2 values to compare
+    if(values.length < 2) return 0;
+
+    // First field in array is base value for comparison
+    let baseValue = values[0];
+    for(let i=1; i<values.length; i++) {
+        let thisRange = Math.abs(baseValue - values[i]) / baseValue;
+        if(thisRange > range) return 0;
+    }
+
+    return 1;
+}
+
 // Type: check-fields-inverse
 // Description: verifies that a field does NOT exist or has no value
 // Parameters:
@@ -635,6 +667,7 @@ module.exports = {
     checkFieldsComparisonFlag,
     checkFieldsFlag,
     checkFieldsValueFlag,
+    checkFieldValueRangeFlag,
     checkNotFieldsFlag,
     checkSchemaFlag,
     checkSectionsFlag,
