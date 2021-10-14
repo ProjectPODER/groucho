@@ -605,11 +605,9 @@
             "id": "traz-ip",
             "category": "Trazabilidad",
             "name": "Dirección del proveedor",
-            "comment": " - Para proveedores de costa rica: 0.00: con pais, 0.25: pais y municipio, 0.50: pais, municipio y dirección, 1.00: dirección no es municpio.  Fuera de costarrica. 0: sin dirección, 1: con dirección",
-            "fields": [
-                "parties.address"
-            ],
-            "type": "check-fields-bool"
+            "type": "custom",
+            "file": "customCRFlags",
+            "function": "direccionProveedor"
         },
         {
             "id": "traz-ir5",

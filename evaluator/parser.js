@@ -42,6 +42,8 @@ function parseFlags(file) {
             dates: getRuleField(rule, 'dates'),             // VALIDAR
             difference: getRuleField(rule, 'difference'),   // VALIDAR
             range: getRuleField(rule, 'range'),             // VALIDAR
+            file: getRuleField(rule, 'file'),               // VALIDAR
+            function: getRuleField(rule, 'function'),       // VALIDAR
         };
 
         rulesArr.contract_rules.push(ruleObj);

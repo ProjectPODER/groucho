@@ -11,7 +11,8 @@ const {
     checkSectionsFlag,
     checkUrlFieldFlag,
     checkNotUrlFieldFlag,
-    dateDifferenceFlag
+    dateDifferenceFlag,
+    customFlag
 } = require('./redFlags/redFlags');
 const laundry = require('company-laundry');
 const _ = require('lodash');
@@ -58,6 +59,8 @@ function getFlagScore(contract, flag) {
             return checkFieldsComparisonFlag(contract, flag.fields, 0);
         case 'field-inequality-bool':
             return checkFieldsComparisonFlag(contract, flag.fields, 1);
+        case 'custom':
+            return customFlag(contract, flag);
     }
 }
 
@@ -202,7 +205,7 @@ function evaluateFlags(record, flags, flagCollectionObj) {
         // Iterate flags
         flags.map( (flag) => {
             let flagScore = getFlagScore(contract, flag);
-            console.log(flag.id, flagScore);
+            // console.log(flag.id, flagScore);
             contratoFlags.flags[flag.categoryID][flag.id].push({ year: year, score: flagScore });
         } );
 
