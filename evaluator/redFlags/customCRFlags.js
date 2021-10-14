@@ -1,6 +1,7 @@
 const {
     isEmpty,
     isObject,
+    isArray,
     isString,
     isNumeric,
     isDate,

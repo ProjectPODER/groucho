@@ -4,6 +4,7 @@ const removeDiacritics = require('diacritics').remove;
 const {
     isEmpty,
     isObject,
+    isArray,
     isString,
     isNumeric,
     isDate,

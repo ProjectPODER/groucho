@@ -176,6 +176,7 @@ function evaluateDateCondition(contract, conditionType, condition, daysDifferenc
 module.exports = {
     isEmpty,
     isObject,
+    isArray,
     isString,
     isNumeric,
     isDate,
