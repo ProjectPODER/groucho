@@ -272,7 +272,7 @@ function evaluateFromStream(record) {
     else contract = record;
 
     if( isValidContract(contract) ) {
-        evaluations = evaluateFlags(contract, flags.contract_rules, flagCollectionObj); // Perform evaluation of the document
+        evaluations = evaluateFlags(record, contract, flags.contract_rules, flagCollectionObj); // Perform evaluation of the document
         seenContracts += evaluations.length;
         /*
         evaluations.map( (evaluation) => {

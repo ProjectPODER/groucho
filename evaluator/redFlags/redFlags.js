@@ -1,4 +1,5 @@
-const ocdsSchema = require('./ocdsSchema');
+const Validator = require('jsonschema').Validator;
+const path = require("path");
 const validUrl = require('valid-url');
 const removeDiacritics = require('diacritics').remove;
 const {
@@ -13,6 +14,15 @@ const {
     evaluateConditions,
     evaluateDateCondition
 } = require('./util');
+
+
+// ---------- INITIALIZE SCHEMA VALIDATION ----------
+
+const fs = require('fs');
+const ocdsSchema = JSON.parse(fs.readFileSync(path.resolve('./evaluator/redFlags/ocdsSchema.json'), 'utf8'));
+const v = new Validator();
+// v.addSchema(ocdsSchema, 'https://standard.open-contracting.org/schema/1__1__5/record-package-schema.json');
+
 
 // ---------- FLAG FUNCTIONS ----------
 
@@ -375,8 +385,24 @@ function checkNotFieldsFlag(contract, fields) {
 // Parameters:
 //      contract: the document to evaluate
 //      schema: path to file with the schema to verify against
-function checkSchemaFlag() {
-    return 0;
+function checkSchemaFlag(record) {
+    let packagedRecord = getRecordPackage(record);
+    let validation = v.validate(packagedRecord, ocdsSchema);
+    
+    if(validation.errors.length > 0) return 0;
+    return 1;
+}
+
+function getRecordPackage(record) {
+    return {
+        uri: "https://standard.open-contracting.org/schema/1__1__5/record-package-schema.json",
+        publishedDate: record.compiledRelease.date,
+        records: [ record ],
+        version: "1.1",
+        publisher: {
+            name: "Groucho"
+        }
+    }
 }
 
 // Type: check-sections-rate

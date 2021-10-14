@@ -29,7 +29,7 @@ function getContractYear(contract) {
     return startDate.split('-')[0];
 }
 
-function getFlagScore(contract, flag) {
+function getFlagScore(record, contract, flag) {
     switch(flag.flagType) {
         case 'check-fields-rate':
             return checkFieldsRateFlag(contract, flag.fields);
@@ -44,7 +44,7 @@ function getFlagScore(contract, flag) {
         case 'check-fields-inverse':
             return checkNotFieldsFlag(contract, flag.fields);
         case 'check-schema-bool':
-            return checkSchemaFlag();
+            return checkSchemaFlag(record);
         case 'check-sections-rate':
             return checkSectionsFlag(contract, flag.fields);
         case 'check-url-bool':
@@ -126,7 +126,7 @@ function getContractsFromRecord(record) {
     return contracts;
 }
 
-function evaluateFlags(record, flags, flagCollectionObj) {
+function evaluateFlags(rawRecord, record, flags, flagCollectionObj) {
     let contracts = getContractsFromRecord(record);
     let results = [];
     let tempFlags = JSON.stringify(flagCollectionObj);
@@ -204,7 +204,7 @@ function evaluateFlags(record, flags, flagCollectionObj) {
 
         // Iterate flags
         flags.map( (flag) => {
-            let flagScore = getFlagScore(contract, flag);
+            let flagScore = getFlagScore(rawRecord, contract, flag);
             // console.log(flag.id, flagScore);
             contratoFlags.flags[flag.categoryID][flag.id].push({ year: year, score: flagScore });
         } );
