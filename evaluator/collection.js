@@ -119,6 +119,7 @@ function getContractCriteriaSummary(collection, criteriaObj, ruleset_id) {
             ocid: item.ocid,
             ruleset_id: ruleset_id,
             date_signed: item.hasOwnProperty('date_signed')? item.date_signed : null,
+            govLevel: item.hasOwnProperty('govLevel')? item.govLevel : null,
             parties: item.parties,
             value: item.value,
             fields: item.fields
