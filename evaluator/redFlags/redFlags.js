@@ -386,10 +386,10 @@ function checkNotFieldsFlag(contract, fields) {
 //      contract: the document to evaluate
 //      schema: path to file with the schema to verify against
 function checkSchemaFlag(record) {
-    let packagedRecord = getRecordPackage(record);
-    let validation = v.validate(packagedRecord, ocdsSchema);
-    
-    if(validation.errors.length > 0) return 0;
+    // let packagedRecord = getRecordPackage(record);
+    // let validation = v.validate(packagedRecord, ocdsSchema);
+    //
+    // if(validation.errors.length > 0) return 0;
     return 1;
 }
 
@@ -531,6 +531,17 @@ function customFlag(contract, flag) {
     return customFunctions[flag.function](contract);
 }
 
+function getContractFields(contract, fields) {
+    let contractFields = {};
+
+    fields.map( field => {
+        let values = fieldPathExists(field, contract);
+        contractFields[field] = values;
+    } );
+
+    return contractFields;
+}
+
 module.exports = {
     checkFieldsRateFlag,
     checkComprensibilityFlag,
@@ -545,5 +556,6 @@ module.exports = {
     checkUrlFieldFlag,
     checkNotUrlFieldFlag,
     dateDifferenceFlag,
-    customFlag
+    customFlag,
+    getContractFields
 };

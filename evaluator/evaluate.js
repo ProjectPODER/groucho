@@ -12,7 +12,8 @@ const {
     checkUrlFieldFlag,
     checkNotUrlFieldFlag,
     dateDifferenceFlag,
-    customFlag
+    customFlag,
+    getContractFields
 } = require('./redFlags/redFlags');
 const laundry = require('company-laundry');
 const _ = require('lodash');
@@ -126,7 +127,7 @@ function getContractsFromRecord(record) {
     return contracts;
 }
 
-function evaluateFlags(rawRecord, record, flags, flagCollectionObj) {
+function evaluateFlags(rawRecord, record, flags, partyFields, flagCollectionObj) {
     let contracts = getContractsFromRecord(record);
     let results = [];
     let tempFlags = JSON.stringify(flagCollectionObj);
@@ -171,30 +172,42 @@ function evaluateFlags(rawRecord, record, flags, flagCollectionObj) {
 
                 // If the govLevel is "region", extract the state
                 // If the govLevel is "city", extract the municipality and the state
-                switch(party.govLevel) {
-                    case 'region':
-                        var stateObj = {
-                            id: laundry.simpleName(laundry.launder(party.address.region)),
-                            entity: 'state'
+                if(party.hasOwnProperty('details') && party.details.hasOwnProperty('govLevel')) {
+                    if(party.hasOwnProperty('address') && party.address.hasOwnProperty('countryName')) {
+                        let countryCode = laundry.cleanCountry(party.address.countryName);
+                        let countryID = laundry.simpleName(countryCode);
+
+                        switch(party.details.govLevel) {
+                            case 'region':
+                                var stateObj = {
+                                    id: countryID + '-' + laundry.simpleName(laundry.launder(party.address.region)),
+                                    name: party.address.region,
+                                    entity: 'state'
+                                }
+                                contratoParties.push(stateObj);
+                                break;
+                            case 'city':
+                                var cityStateObj = {
+                                    id: countryID + '-' + laundry.simpleName(laundry.launder(party.address.region)),
+                                    name: party.address.region,
+                                    entity: 'state'
+                                }
+                                contratoParties.push(cityStateObj);
+                                var cityObj = {
+                                    id: cityStateObj.id + '-' + laundry.simpleName(laundry.launder(party.address.locality)),
+                                    name: party.address.locality,
+                                    parent: { id: cityStateObj.id, name: cityStateObj.name },
+                                    entity: 'municipality'
+                                }
+                                contratoParties.push(cityObj);
+                                break;
+                            case 'country':
+                                // Nothing to be done at country level...
+                                break;
                         }
-                        contratoParties.push(stateObj);
-                        break;
-                    case 'city':
-                        var cityObj = {
-                            id: laundry.simpleName(laundry.launder(party.address.locality)),
-                            parent: { id: laundry.simpleName(laundry.launder(party.address.region)) },
-                            entity: 'municipality'
-                        }
-                        contratoParties.push(cityObj);
-                        var cityStateObj = {
-                            id: laundry.simpleName(laundry.launder(party.address.region)),
-                            entity: 'state'
-                        }
-                        contratoParties.push(cityStateObj);
-                        break;
-                    case 'country':
-                        // Nothing to be done at country level...
-                        break;
+
+                        Object.assign(contratoFlags, { govLevel: party.details.govLevel });
+                    }
                 }
             }
             if(partyObj) {
@@ -211,6 +224,10 @@ function evaluateFlags(rawRecord, record, flags, flagCollectionObj) {
 
         // Add parties to this contract
         Object.assign(contratoFlags, { parties: contratoParties });
+
+        // Get party field values (used by party flags later)
+        let contractFields = getContractFields(contract, partyFields);
+        Object.assign(contratoFlags.fields, contractFields);
 
         results.push( { contratoFlags, year, contract: contract } );
     } );

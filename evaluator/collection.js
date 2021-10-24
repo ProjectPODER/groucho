@@ -7,7 +7,8 @@ function createFlagCollectionObject(id, flags) {
         name: '',
         type: '', // Values: contract, party
         entity: '',
-        flags: {}
+        flags: {},
+        fields: {}
     };
 
     flags.map( (flag) => {
@@ -112,14 +113,15 @@ function getContractCriteriaSummary(collection, criteriaObj, ruleset_id) {
     let tempCriteriaObj = JSON.stringify(criteriaObj);
 
     collection.map( (evaluation) => {
-        let item = evaluation.contratoFlags;
+        let item = evaluation.hasOwnProperty('contratoFlags')? evaluation.contratoFlags : evaluation;
         let contractFlagObj = {
             id: item.id + '-' + item.contract_id,
             ocid: item.ocid,
             ruleset_id: ruleset_id,
             date_signed: item.hasOwnProperty('date_signed')? item.date_signed : null,
             parties: item.parties,
-            value: item.value
+            value: item.value,
+            fields: item.fields
         };
         let contract_score = JSON.parse(tempCriteriaObj);
 

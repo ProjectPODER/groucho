@@ -28,7 +28,8 @@ function parseFlags(file) {
     let rulesArr = {
         ruleset_id: flags.id,
         contract_rules: [],
-        party_rules: []
+        party_rules: [],
+        party_fields: []
     };
     contract_rules.map( (rule) => {
         var ruleObj = {
@@ -64,9 +65,14 @@ function parseFlags(file) {
             difference: getRuleField(rule, 'difference'),   // VALIDAR
         };
 
+        if(ruleObj.fields && ruleObj.fields.length > 0) {
+            ruleObj.fields.map (field => {
+                if(rulesArr.party_fields.indexOf(field) < 0) rulesArr.party_fields.push(field);
+            });
+        }
+
         rulesArr.party_rules.push(ruleObj);
     } );
-
 
     return rulesArr;
 }
