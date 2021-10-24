@@ -158,7 +158,7 @@ function evaluateParties(client) {
 async function getContractFlags(client,orgTree,query,batch_size,hit_count) {
 
     const params = {
-        index: 'contract_flags',
+        index: args.collection || 'contract_flags',
         scroll: '30s',
         size: batch_size,
         body: {
@@ -188,26 +188,26 @@ async function getContractFlags(client,orgTree,query,batch_size,hit_count) {
         for (hit of response.body.hits.hits) {
             hit_count++;
             if (args.limit) {
-                console.log("hit",hit_count,args.limit|"");
+                // console.log("hit",hit_count,args.limit|"");
             }
             if (hit_count >= args.limit) {
                 // console.log("Reached hit limit",args.limit);
                 break
             }
 
-            // console.log(hit);
             evaluation = hit._source;
+            // console.log(evaluation);
 
             evaluation.parties.map( (party) => { // Assign contractScore values to all the parties involved
-                updateFlagCollection(party, partyFlagCollection, evaluation.date_signed.$date.substr(0,4), evaluation.rules_score);
+                updateFlagCollection(party, partyFlagCollection, evaluation.date_signed.substr(0,4), evaluation.rules_score);
             } );
 
             // AQUI BANDERAS NODO Y CONFIABILIDAD
-            updateOrgTree(orgTree.roots, evaluation, evaluation.parties);
+            // updateOrgTree(orgTree.roots, evaluation, evaluation.parties);
 
             // console.log("orgTree",orgTree);
 
-            contractEvaluations = contractEvaluations.concat(getContractCriteriaSummary([evaluation], flagCriteriaObj,flags.ruleset_id));
+            // contractEvaluations = contractEvaluations.concat(getContractCriteriaSummary([evaluation], flagCriteriaObj,flags.ruleset_id));
         }
 
         //Todo: Clear scroll
@@ -272,7 +272,7 @@ function evaluateFromStream(record) {
     else contract = record;
 
     if( isValidContract(contract) ) {
-        evaluations = evaluateFlags(record, contract, flags.contract_rules, flagCollectionObj); // Perform evaluation of the document
+        evaluations = evaluateFlags(record, contract, flags.contract_rules, flags.party_fields, flagCollectionObj); // Perform evaluation of the document
         seenContracts += evaluations.length;
         /*
         evaluations.map( (evaluation) => {

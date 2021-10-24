@@ -668,8 +668,7 @@
             "id": "conf-index",
             "category": "Confiabilidad",
             "name": "CONFIABILIDAD GLOBAL",
-            "type": "reliability",
-            "fields": "total_score"
+            "type": "reliability"
         },
         {
             "id": "comp-aepm",
@@ -677,7 +676,7 @@
             "name": "AGENTE ECONOMICO PREPONDERANTE (MONTO)",
             "limit": [0.2, 0.3, 0.5],
             "type": "limited-party-summer-percent",
-            "fields": "contract.value.amount"
+            "fields": ["contracts.value.amount"]
         },
         {
             "id": "comp-aepc",
@@ -685,7 +684,7 @@
             "name": "AGENTE ECONOMICO PREPONDERANTE (CANTIDAD)",
             "limit": [0.2, 0.3, 0.5],
             "type": "limited-party-accumulator-percent",
-            "fields": "id"
+            "fields": ["id"]
         },
         {
             "id": "traz-trc",
@@ -694,7 +693,7 @@
             "limit": [5,10,15],
             "minimum_contract_count": 10,
             "type": "limited-accumulator-percent",
-            "fields": "contract.title"
+            "fields": ["contracts.title"]
         },
         {
             "id": "traz-mcr",
@@ -703,7 +702,7 @@
             "limit": [5,10,15],
             "minimum_contract_count": 10,
             "type": "limited-accumulator-percent",
-            "fields": "contract.value.amount"
+            "fields": ["contracts.value.amount"]
         },
         {
             "id": "traz-cd",
@@ -711,14 +710,14 @@
             "name": "Cédula dupicada",
             "limit": 1,
             "type": "limited-party-accumulator-count",
-            "fields": "parties.identifier.id"
+            "fields": ["parties.identifier.id"]
         },
         {
             "id": "comp-ncap",
             "category": "Competitividad",
             "name": "NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO",
             "limit": [3,5,10],
-            "fields": "startDate",
+            "fields": ["contracts.period.startDate"],
             "type": "limited-accumulator-percent"
         }
     ]
