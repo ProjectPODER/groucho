@@ -80,7 +80,7 @@ function evaluateParties(client) {
 
     getContractFlags(client,orgTree,query,batch_size,hit_count)
         .then( () => { // All contracts have been evaluated and processed, proceed to process all parties
-            console.log('Processing parties.');
+            // console.log('Processing parties.');
             const arrayLength = Object.keys(partyFlagCollection).length; // How many parties have we seen?
             let contractCriteriaObj = getCriteriaObject(flags.contract_rules);
             let partyCriteriaObj = getCriteriaObject(flags.party_rules);
@@ -116,11 +116,11 @@ function evaluateParties(client) {
                 }
             }
 
-            console.log('Evaluating node flags.');
+            // console.log('Evaluating node flags.');
 
             let nodeScores = evaluateNodeFlags(orgTree.roots, partyScores,flags.party_rules);
             // console.log( JSON.stringify(nodeScores, null, 4) );
-            console.log('Node flags done.');
+            // console.log('Node flags done.');
 
             // Insert PARTY_FLAGS to DB:
             // Split into n=chunkSize chunks
@@ -142,12 +142,11 @@ function evaluateParties(client) {
                     partyChunk = [];
                 }
             }
-            console.log('Seen parties:', parties);
-
+            // console.log('Seen parties:', parties);
 
         } )
         .then( () => {
-            console.timeEnd('duration');
+            // console.timeEnd('duration');
             process.exit(0); // All done!
         } ).
         catch( (err) => { console.log('Error:', err); process.exit(1); } );
@@ -168,19 +167,16 @@ async function getContractFlags(client,orgTree,query,batch_size,hit_count) {
 
     const scrollSearch = client.helpers.scrollSearch(params)
 
-    console.log('Scrolling contract_flags from elastic...',params);
+    // console.log('Scrolling contract_flags from elastic...',params);
 
-    if (args.limit) {
-        console.log("Scrolling limited to",args.limit,"hits");
-    }
-    else {
-        console.log("Scrolling without limit, this will process all hits (long)");
-
-    }
+    // if (args.limit)
+    //     console.log("Scrolling limited to",args.limit,"hits");
+    // else
+    //     console.log("Scrolling without limit, this will process all hits (long)");
 
     for await (const response of scrollSearch) {
         if (hit_count >= args.limit) {
-            console.log("Reached hit limit",args.limit);
+            // console.log("Reached hit limit",args.limit);
             response.clear()
             break
         }
@@ -203,7 +199,7 @@ async function getContractFlags(client,orgTree,query,batch_size,hit_count) {
             } );
 
             // AQUI BANDERAS NODO Y CONFIABILIDAD
-            // updateOrgTree(orgTree.roots, evaluation, evaluation.parties);
+            updateOrgTree(orgTree.roots, evaluation, evaluation.parties);
 
             // console.log("orgTree",orgTree);
 
@@ -228,12 +224,12 @@ function connect(callback) {
     const client = new Client({ node: elasticNode, ssl: { rejectUnauthorized: false }, resurrectStrategy: "none", compression: "gzip" });
 
     function elastic_test(retry=0) {
-      console.log("Testing elastic connnection",retry)
+      // console.log("Testing elastic connnection",retry)
 
       //Simple test query
       client.xpack.usage().then(
         () => {
-          console.log("Connected to elastic node:",elasticNode);
+          // console.log("Connected to elastic node:",elasticNode);
           callback(client)
         }
       ).catch(e => {
