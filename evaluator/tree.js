@@ -201,14 +201,14 @@ function extractDataFromContract(contract) {
             funders.push(p.id);
         }
         if(role == 'supplier') {
-            let date = contract.hasOwnProperty('date_signed')? contract.date_signed.$date : contract.period.startDate;
+            let date = contract.hasOwnProperty('date_signed')? contract.date_signed : contract.period.startDate;
             let date_parts = processDate(date);
             let c_summary = {
                 year: date_parts[0].toString(),
                 date: date_parts[1] + '-' + date_parts[2],
                 id: contract.id,
                 amount: parseFloat(contract.value.amount)
-            }            
+            }
             suppliers.push( { id: p.id, contract: c_summary } );
         }
     } );
@@ -279,6 +279,7 @@ function processDate(date) {
 }
 
 function isDate(d) {
+    if(!d) return false;
     return typeof d.toISOString === "function";
 }
 

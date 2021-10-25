@@ -323,7 +323,6 @@ function evaluateNode(nodeIDs,nodeScores,flags,supplierIDs,branch) {
 
         } );
 
-
     })
 
 }
@@ -386,7 +385,7 @@ function partyGlobalReliability(supplierIDs,partyScores,flag_field) {
     supplierIDs.map( (id) => {
         if(partyScores[id]) {
             //This case is for suppliers
-            console.log(partyScores[id]);
+            // console.log(partyScores[id]);
             if (partyScores[id].contract_categories[flag_field]) {
 
                 supplier_total_score += partyScores[id].contract_categories[flag_field];
