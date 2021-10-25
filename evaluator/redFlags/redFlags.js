@@ -537,7 +537,8 @@ function getContractFields(contract, fields) {
     fields.map( field => {
         let values = fieldPathExists(field, contract);
         let fieldName = field.replace(/\./g, '_');
-        contractFields[fieldName] = values;
+        if(values.length == 1) contractFields[fieldName] = values[0];
+        else contractFields[fieldName] = values;
     } );
 
     return contractFields;
