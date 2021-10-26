@@ -4,7 +4,7 @@ function createOrgTree() {
     }
 }
 
-function updateOrgTree(roots, contract, parties) {
+function updateOrgTree(roots, contract, parties, party_rules) {
     // Data from contracts:
     //      dependencyID
     //      ucID
@@ -24,7 +24,7 @@ function updateOrgTree(roots, contract, parties) {
     // Check received parties for contract to add state and municipality to roots array
 
     // Get UC or create it if not seen yet
-    if(!branchExists(roots, data.ucID)) addBranch(roots, data.ucID, data.dependencyID);
+    if(!branchExists(roots, data.ucID)) addBranch(roots, data.ucID, data.dependencyID, data);
     let branch = roots[data.ucID];
 
     // Get funders if they exist
@@ -37,6 +37,7 @@ function updateOrgTree(roots, contract, parties) {
     }
     // Get states and municipalities if they exist
     parties.map( (party) => {
+        // console.log('parties.map', branch.id, party.entity, party)
         if(party.entity == 'state') {
             if(!branchExists(roots, party.id)) addBranch(roots, party.id, null);
             f_branches.push(roots[party.id]);
@@ -88,6 +89,27 @@ function updateOrgTree(roots, contract, parties) {
             f.children[supplier.id].years[year_index].c_a += parseFloat(supplier.contract.amount);
         } );
 
+        // For each party flag:
+        // - Get relevant party fields from party flags
+        // - According to flag, accumulate in the proper way
+        // - - First for buyer
+        // - - Then for supplier
+        // - - Finally for funders/areas
+        party_rules.map( rule => {
+            switch(rule.flagType) {
+                case 'limited-party-summer-percent':
+                    // Buyer
+                    // Supplier
+                    // Additional (funders, states, etc.)
+                    break;
+                case 'limited-party-accumulator-percent':
+                    break;
+                case 'limited-accumulator-percent':
+                    break;
+                case 'limited-party-accumulator-count':
+                    break;
+            }
+        } );
 
         let title_index = supplier.contract.title;
         // Update title count for this buyer

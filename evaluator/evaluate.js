@@ -252,11 +252,11 @@ function evaluateNodeFlags(roots, nodeScores, flags) {
 
         // console.log("supplierIDs",supplierIDs);
 
-        evaluateNode([ucID],nodeScores,flags,supplierIDs, branch);
+        evaluateNode([ucID], nodeScores, flags, supplierIDs, branch);
         if (dependenciaID) {
-            evaluateNode([dependenciaID],nodeScores,flags,supplierIDs, branch);
+            evaluateNode([dependenciaID], nodeScores, flags, supplierIDs, branch);
         }
-        evaluateNode(supplierIDs,nodeScores,flags,supplierIDs, branch);
+        evaluateNode(supplierIDs, nodeScores, flags, supplierIDs, branch);
 
         // console.log("evaluateNodeFlags",nodeScores);
 
@@ -268,7 +268,7 @@ function evaluateNodeFlags(roots, nodeScores, flags) {
     return nodeScores;
 }
 
-function evaluateNode(nodeIDs,nodeScores,flags,supplierIDs,branch) {
+function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch) {
     // console.log("evaluateNode",nodeIDs);
 
     nodeIDs.map(nodeID => {
@@ -284,7 +284,6 @@ function evaluateNode(nodeIDs,nodeScores,flags,supplierIDs,branch) {
         // Iterate flags
         flags.map( (flag) => {
             branch_years.map(year => {
-
                 let flagScore = getNodeFlagScore(nodeScores, flag, supplierIDs,branch,year);
                 //Add value to party
                 // console.log(nodeID,year,flagScore,flag.id);
@@ -303,11 +302,9 @@ function evaluateNode(nodeIDs,nodeScores,flags,supplierIDs,branch) {
                 });
 
                 if (currentYear) {
-                    if (!currentYear.node_rules) {
-                        currentYear.node_rules = {}
-                    }
+                    if (!currentYear.node_rules) currentYear.node_rules = {};
+                    if(!currentYear.node_rules[flag.id]) currentYear.node_rules[flag.id] = 0;
                     currentYear.node_rules[flag.id] = accumulativeAverage(currentYear.node_rules[flag.id], nodeScores[nodeID].num_parties, flagScore, nodeScores[nodeID].num_parties);
-
                 }
                 else {
                     yearValue = {
@@ -327,11 +324,11 @@ function evaluateNode(nodeIDs,nodeScores,flags,supplierIDs,branch) {
 
 }
 
-function getNodeFlagScore(nodeScores, flag, supplierIDs,branch,year) {
+function getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year) {
     switch(flag.flagType) {
         case "reliability":
             // "id": "conf-index",
-            return partyGlobalReliability(supplierIDs, nodeScores,flag.field)
+            return partyGlobalReliability(supplierIDs, nodeScores, 'total_score');
 
         case "limited-accumulator-percent":
             // "id": "comp-ncap",
@@ -378,8 +375,6 @@ function getNodeFlagScore(nodeScores, flag, supplierIDs,branch,year) {
 
 // Promediar total_scores de todos los suppliers de esta UC, y calcular confiabilidad para los suppliers en el mismo loop
 function partyGlobalReliability(supplierIDs,partyScores,flag_field) {
-
-    let supplier_total_score_avg = 0;
     let supplier_total_score = 0;
 
     supplierIDs.map( (id) => {
@@ -387,7 +382,6 @@ function partyGlobalReliability(supplierIDs,partyScores,flag_field) {
             //This case is for suppliers
             // console.log(partyScores[id]);
             if (partyScores[id].contract_categories[flag_field]) {
-
                 supplier_total_score += partyScores[id].contract_categories[flag_field];
             }
             //This case is for dependencias
@@ -396,8 +390,8 @@ function partyGlobalReliability(supplierIDs,partyScores,flag_field) {
             }
         }
     } );
-    return supplier_total_score_avg = supplier_total_score / supplierIDs.length;
 
+    return supplier_total_score / supplierIDs.length;
 }
 
 function limitedAccumulatorPercent(branch,year,flag_field,flag_limit, minimum_contract_count) {
