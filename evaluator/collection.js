@@ -31,17 +31,27 @@ function findObjectInCollection(id, collection) {
     }
 }
 
-function updateFlagCollection(party, collection, year, flags) {
-    let obj = findObjectInCollection(party.id, collection);
-
+function updateFlagCollection(party, collection, evaluation, flags) {
+    var obj = findObjectInCollection(party.id, collection);
+    var year = evaluation.date_signed.substr(0,4);
+    var flags = evaluation.rules_score;
     if(obj == -1) { // Party hasn't been seen yet
         let newObj = {};
 
         newObj.id = party.id;
+        newObj.ruleset_id = evaluation.ruleset_id;
         // newObj.name = party.name;
         newObj.type = 'party';
         newObj.entity = party.entity;
-
+        if(party.entity == 'buyer') {
+            newObj.govLevel = evaluation.govLevel;
+            evaluation.parties.map( sibling => {
+                if(sibling.entity == 'state' || sibling.entity == 'municipality') {
+                    newObj[sibling.entity] = sibling.id;
+                }
+            } );
+            // console.log('new object from evaluation', newObj);
+        }
         if(party.hasOwnProperty('parent')) {
             newObj.parent = party.parent;
         }
@@ -170,7 +180,11 @@ function getPartyCriteriaSummary(collection, criteriaObj) {
             id: item.id,
             type: item.entity
         };
-
+        if(party.type == 'buyer') {
+            party.govLevel = item.govLevel;
+            if(item.hasOwnProperty('state')) Object.assign(party, { state: item.state });
+            if(item.hasOwnProperty('municipality')) Object.assign(party, { municipality: item.municipality });
+        }
         if(item.hasOwnProperty('parent')) {
             Object.assign( party, { parent: item.parent } )
         }
@@ -178,6 +192,7 @@ function getPartyCriteriaSummary(collection, criteriaObj) {
         let contract_score = JSON.parse(tempCriteriaObj);
         let years = [];
         let partyFlagObj = {
+            ruleset_id: item.ruleset_id,
             party,
             contract_score,
             contract_rules: {},
@@ -275,7 +290,7 @@ function getPartyNodeSummary(collection, nodeScores) {
             // console.log(item,node_score);
             let category_acc = {};
             for (let rule_index in Object.keys(node_score.node_rules)) {
-                let rule = Object.keys(node_score.node_rules)[rule_index]
+                let rule = Object.keys(node_score.node_rules)[rule_index];
                 let category = rule.split("-")[0];
                 if (!category_acc[category]) {
                     category_acc[category]={
@@ -288,13 +303,13 @@ function getPartyNodeSummary(collection, nodeScores) {
             }
             for (category_index in Object.keys(category_acc)) {
                 let category = Object.keys(category_acc)[category_index];
-                item.node_categories[category]=category_acc[category].value / category_acc[category].count;
+                item.node_categories[category] = category_acc[category].value / category_acc[category].count;
             }
 
             //TODO: Hardcoded category names
             item.node_categories.total_score = (item.node_categories.comp + item.node_categories.traz) / 2 ;
 
-            item.category_score = {
+            item.category_score = { // TODO: tal vez quitar esto
                 comp: (item.contract_categories.comp + item.node_categories.comp) / 2,
                 traz: (item.contract_categories.traz + item.node_categories.traz) / 2,
             };

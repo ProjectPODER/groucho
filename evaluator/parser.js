@@ -57,12 +57,11 @@ function parseFlags(file) {
             id: rule.id,
             name: rule.name,
             category: rule.category,
-            categoryID: "conf",
+            categoryID: getIDFromString(rule.id),
             flagType: rule.type,
             fields: getRuleField(rule, 'fields'),           // VALIDAR
-            values: getRuleField(rule, 'values'),           // VALIDAR
-            dates: getRuleField(rule, 'dates'),             // VALIDAR
-            difference: getRuleField(rule, 'difference'),   // VALIDAR
+            limit: getRuleField(rule, 'limit'),             // VALIDAR
+            minimum_contract_count: getRuleField(rule, 'minimum_contract_count')
         };
 
         if(ruleObj.fields && ruleObj.fields.length > 0) {
@@ -71,10 +70,33 @@ function parseFlags(file) {
             });
         }
 
-        rulesArr.party_rules.push(ruleObj);
+        var expandedRules = [];
+        if(ruleObj.limit) {
+            if(ruleObj.limit.length > 1) {
+                ruleObj.limit.map( value => {
+                    // Create new rules for each limit value
+                    let newRuleObj = JSON.parse(JSON.stringify(ruleObj));
+                    newRuleObj.id += cleanValue(value);
+                    newRuleObj.limit = value;
+                    expandedRules.push(newRuleObj);
+                } );
+            }
+            else {
+                ruleObj.limit = ruleObj.limit[0];
+                expandedRules.push(ruleObj);
+            }
+        }
+        else expandedRules.push(ruleObj);
+
+        rulesArr.party_rules.push(...expandedRules);
     } );
 
     return rulesArr;
+}
+
+function cleanValue(value) {
+    let valueStr = value.toString();
+    return valueStr.replace('.', '');
 }
 
 function getCriteriaObject(flags) {

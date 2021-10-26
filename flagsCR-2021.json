@@ -708,7 +708,7 @@
             "id": "traz-cd",
             "category": "Trazabilidad",
             "name": "Cédula dupicada",
-            "limit": 1,
+            "limit": [1],
             "type": "limited-party-accumulator-count",
             "fields": ["parties.identifier.id"]
         },

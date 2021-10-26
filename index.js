@@ -78,7 +78,7 @@ function evaluateParties(client) {
 
     let hit_count = 0;
 
-    getContractFlags(client,orgTree,query,batch_size,hit_count)
+    getContractFlags(client, orgTree, query, batch_size, hit_count)
         .then( () => { // All contracts have been evaluated and processed, proceed to process all parties
             // console.log('Processing parties.');
             const arrayLength = Object.keys(partyFlagCollection).length; // How many parties have we seen?
@@ -100,6 +100,7 @@ function evaluateParties(client) {
                     let party_flags = getPartyCriteriaSummary(partyChunk, contractCriteriaObj);
                     party_flags.map( (party) => {
                         partyScores[party.party.id] = {
+                            ruleset_id: party.ruleset_id,
                             party: party.party,
                             contract_categories: party.contract_score,
                             contract_rules: party.contract_rules,
@@ -118,7 +119,7 @@ function evaluateParties(client) {
 
             // console.log('Evaluating node flags.');
 
-            let nodeScores = evaluateNodeFlags(orgTree.roots, partyScores,flags.party_rules);
+            let nodeScores = evaluateNodeFlags(orgTree.roots, partyScores, flags.party_rules);
             // console.log( JSON.stringify(nodeScores, null, 4) );
             // console.log('Node flags done.');
 
@@ -195,11 +196,11 @@ async function getContractFlags(client,orgTree,query,batch_size,hit_count) {
             // console.log(evaluation);
 
             evaluation.parties.map( (party) => { // Assign contractScore values to all the parties involved
-                updateFlagCollection(party, partyFlagCollection, evaluation.date_signed.substr(0,4), evaluation.rules_score);
+                updateFlagCollection(party, partyFlagCollection, evaluation);
             } );
 
             // AQUI BANDERAS NODO Y CONFIABILIDAD
-            updateOrgTree(orgTree.roots, evaluation, evaluation.parties);
+            updateOrgTree(orgTree.roots, evaluation, evaluation.parties, flags.party_rules);
 
             // console.log("orgTree",orgTree);
 
