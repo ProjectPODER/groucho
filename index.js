@@ -270,15 +270,7 @@ function evaluateFromStream(record) {
     if( isValidContract(contract) ) {
         evaluations = evaluateFlags(record, contract, flags.contract_rules, flags.party_fields, flagCollectionObj); // Perform evaluation of the document
         seenContracts += evaluations.length;
-        /*
-        evaluations.map( (evaluation) => {
-            evaluation.contratoFlags.parties.map( (party) => { // Assign contractScore values to all the parties involved
-                updateFlagCollection(party, partyFlagCollection, evaluation.year, evaluation.contratoFlags.flags);
-            } );
-            // AQUI BANDERAS NODO Y CONFIABILIDAD
-            updateOrgTree(orgTree.roots, evaluation.contract, evaluation.contratoFlags.parties);
-        } );
-        */
+
         contractEval = getContractCriteriaSummary(evaluations, flagCriteriaObj, flagCollectionObj.ruleset_id);
     }
     return contractEval;

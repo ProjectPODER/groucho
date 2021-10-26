@@ -674,7 +674,7 @@
             "id": "comp-aepm",
             "category": "Competitividad",
             "name": "AGENTE ECONOMICO PREPONDERANTE (MONTO)",
-            "limit": [0.2, 0.3, 0.5],
+            "limit": [2, 3, 5],
             "type": "limited-party-summer-percent",
             "fields": ["contracts.value.amount"]
         },
@@ -682,7 +682,7 @@
             "id": "comp-aepc",
             "category": "Competitividad",
             "name": "AGENTE ECONOMICO PREPONDERANTE (CANTIDAD)",
-            "limit": [0.2, 0.3, 0.5],
+            "limit": [2, 3, 5],
             "type": "limited-party-accumulator-percent",
             "fields": ["id"]
         },
