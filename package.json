@@ -1,6 +1,6 @@
 {
   "name": "groucho",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Evaluador de documentos OCDS con banderas configurables.",
   "main": "index.js",
   "scripts": {

@@ -91,107 +91,101 @@ function updateOrgTree(roots, contract, parties, party_rules) {
 
         // For each party flag:
         // - Get relevant party fields from party flags
-        // - According to flag, accumulate in the proper way
-        // - - First for buyer
-        // - - Then for supplier
-        // - - Finally for funders/areas
         party_rules.map( rule => {
-            switch(rule.flagType) {
-                case 'limited-party-summer-percent':
-                    // Buyer
-                    // Supplier
-                    // Additional (funders, states, etc.)
-                    break;
-                case 'limited-party-accumulator-percent':
-                    break;
-                case 'limited-accumulator-percent':
-                    break;
-                case 'limited-party-accumulator-count':
-                    break;
-            }
+            // - According to flag, accumulate in the proper way
+            // - - First for buyer
+            updatePartyFlagData(branch.years[year_index], supplier.contract.source, rule);
+            // - - Then for supplier
+            updatePartyFlagData(leaf.years[year_index], supplier.contract.source, rule);
+            // - - Finally for funders/areas
+            f_branches.map( (f) => {
+                updatePartyFlagData(f.years[year_index], supplier.contract.source, rule);
+                // Update contract count and amount for this supplier
+                updatePartyFlagData(f.children[supplier.id].years[year_index], supplier.contract.source, rule);
+            } );
         } );
 
         let title_index = supplier.contract.title;
-        // Update title count for this buyer
-        if( !branch.years[year_index].titles[title_index] )
-            branch.years[year_index].titles[title_index] = 1;
-        else
-            branch.years[year_index].titles[title_index]++;
-        // Update title count for this supplier
-        if( !leaf.years[year_index].titles[title_index] )
-            leaf.years[year_index].titles[title_index] = 1;
-        else
-            leaf.years[year_index].titles[title_index]++;
-        // Update title count for funders
-        f_branches.map( (f) => {
-            if( !f.years[year_index].titles[title_index] )
-                f.years[year_index].titles[title_index] = 1;
-            else
-                f.years[year_index].titles[title_index]++;
-            // Update title count for this supplier
-            if( !f.children[supplier.id].years[year_index].titles[title_index] )
-                f.children[supplier.id].years[year_index].titles[title_index] = 1;
-            else
-                f.children[supplier.id].years[year_index].titles[title_index]++;
-        } );
+        // // Update title count for this buyer
+        // if( !branch.years[year_index].titles[title_index] )
+        //     branch.years[year_index].titles[title_index] = 1;
+        // else
+        //     branch.years[year_index].titles[title_index]++;
+        // // Update title count for this supplier
+        // if( !leaf.years[year_index].titles[title_index] )
+        //     leaf.years[year_index].titles[title_index] = 1;
+        // else
+        //     leaf.years[year_index].titles[title_index]++;
+        // // Update title count for funders
+        // f_branches.map( (f) => {
+        //     if( !f.years[year_index].titles[title_index] )
+        //         f.years[year_index].titles[title_index] = 1;
+        //     else
+        //         f.years[year_index].titles[title_index]++;
+        //     // Update title count for this supplier
+        //     if( !f.children[supplier.id].years[year_index].titles[title_index] )
+        //         f.children[supplier.id].years[year_index].titles[title_index] = 1;
+        //     else
+        //         f.children[supplier.id].years[year_index].titles[title_index]++;
+        // } );
 
         let amount_index = supplier.contract.amount.toString();
-        // Update amount count for this buyer and amount
-        if( !branch.years[year_index].amounts[amount_index] )
-            branch.years[year_index].amounts[amount_index] = 1;
-        else
-            branch.years[year_index].amounts[amount_index]++;
-        // Update amount count for this supplier and amount
-        if( !leaf.years[year_index].amounts[amount_index] )
-            leaf.years[year_index].amounts[amount_index] = 1;
-        else
-            leaf.years[year_index].amounts[amount_index]++;
-        // Update amount count for funders
-        f_branches.map( (f) => {
-            if( !f.years[year_index].amounts[amount_index] )
-                f.years[year_index].amounts[amount_index] = 1;
-            else
-                f.years[year_index].amounts[amount_index]++;
-            // Update amount count for this supplier and amount
-            if( !f.children[supplier.id].years[year_index].amounts[amount_index] )
-                f.children[supplier.id].years[year_index].amounts[amount_index] = 1;
-            else
-                f.children[supplier.id].years[year_index].amounts[amount_index]++;
-        } );
+        // // Update amount count for this buyer and amount
+        // if( !branch.years[year_index].amounts[amount_index] )
+        //     branch.years[year_index].amounts[amount_index] = 1;
+        // else
+        //     branch.years[year_index].amounts[amount_index]++;
+        // // Update amount count for this supplier and amount
+        // if( !leaf.years[year_index].amounts[amount_index] )
+        //     leaf.years[year_index].amounts[amount_index] = 1;
+        // else
+        //     leaf.years[year_index].amounts[amount_index]++;
+        // // Update amount count for funders
+        // f_branches.map( (f) => {
+        //     if( !f.years[year_index].amounts[amount_index] )
+        //         f.years[year_index].amounts[amount_index] = 1;
+        //     else
+        //         f.years[year_index].amounts[amount_index]++;
+        //     // Update amount count for this supplier and amount
+        //     if( !f.children[supplier.id].years[year_index].amounts[amount_index] )
+        //         f.children[supplier.id].years[year_index].amounts[amount_index] = 1;
+        //     else
+        //         f.children[supplier.id].years[year_index].amounts[amount_index]++;
+        // } );
 
-        if( data.procMethod == 'direct' || data.procMethod == 'limited' ) {
-            // Update direct procurement count and amount for this buyer
-            branch.years[year_index].direct.c_c++;
-            branch.years[year_index].direct.c_a += parseFloat(supplier.contract.amount);
+        // if( data.procMethod == 'direct' || data.procMethod == 'limited' ) {
+        //     // Update direct procurement count and amount for this buyer
+        //     branch.years[year_index].direct.c_c++;
+        //     branch.years[year_index].direct.c_a += parseFloat(supplier.contract.amount);
+        //
+        //     // Update direct procurement count and amount for this supplier
+        //     leaf.years[year_index].direct.c_c++;
+        //     leaf.years[year_index].direct.c_a += parseFloat(supplier.contract.amount);
+        //
+        //     // Update direct procurement count and amount for funders
+        //     f_branches.map( (f) => {
+        //         f.years[year_index].direct.c_c++;
+        //         f.years[year_index].direct.c_a += parseFloat(supplier.contract.amount);
+        //
+        //         // Update direct procurement count and amount for this supplier
+        //         f.children[supplier.id].years[year_index].direct.c_c++;
+        //         f.children[supplier.id].years[year_index].direct.c_a += parseFloat(supplier.contract.amount);
+        //     } );
+        // }
 
-            // Update direct procurement count and amount for this supplier
-            leaf.years[year_index].direct.c_c++;
-            leaf.years[year_index].direct.c_a += parseFloat(supplier.contract.amount);
-
-            // Update direct procurement count and amount for funders
-            f_branches.map( (f) => {
-                f.years[year_index].direct.c_c++;
-                f.years[year_index].direct.c_a += parseFloat(supplier.contract.amount);
-
-                // Update direct procurement count and amount for this supplier
-                f.children[supplier.id].years[year_index].direct.c_c++;
-                f.children[supplier.id].years[year_index].direct.c_a += parseFloat(supplier.contract.amount);
-            } );
-        }
-
-        let date_index = supplier.contract.date;
-        // Finally, update the date counter for the buyer
-        if( !branch.years[year_index].dates[date_index] )
-            branch.years[year_index].dates[date_index] = 1;
-        else
-            branch.years[year_index].dates[date_index]++;
-        // And update the date counter for the buyer
-        f_branches.map( (f) => {
-            if( !f.years[year_index].dates[date_index] )
-                f.years[year_index].dates[date_index] = 1;
-            else
-                f.years[year_index].dates[date_index]++;
-        } );
+        // let date_index = supplier.contract.date;
+        // // Finally, update the date counter for the buyer
+        // if( !branch.years[year_index].dates[date_index] )
+        //     branch.years[year_index].dates[date_index] = 1;
+        // else
+        //     branch.years[year_index].dates[date_index]++;
+        // // And update the date counter for the buyer
+        // f_branches.map( (f) => {
+        //     if( !f.years[year_index].dates[date_index] )
+        //         f.years[year_index].dates[date_index] = 1;
+        //     else
+        //         f.years[year_index].dates[date_index]++;
+        // } );
 
         branch.children[supplier.id] = leaf;
     } );
@@ -229,7 +223,8 @@ function extractDataFromContract(contract) {
                 year: date_parts[0].toString(),
                 date: date_parts[1] + '-' + date_parts[2],
                 id: contract.id,
-                amount: parseFloat(contract.value.amount)
+                amount: parseFloat(contract.value.amount),
+                source: contract
             }
             suppliers.push( { id: p.id, contract: c_summary } );
         }
@@ -247,6 +242,45 @@ function extractDataFromContract(contract) {
 function getSupplierIDs(awards, awardID) {
     let award = awards.filter( (a) => a.id == awardID );
     return award[0].suppliers;
+}
+
+function updatePartyFlagData(node, data, rule) {
+    switch(rule.flagType) {
+        case 'limited-party-summer-percent':
+            rule.fields.map( f => {
+                let fieldName = rule.id + '_' + f.replace(/\./g, '_');
+                let value = 0;
+                if(fieldName == rule.id + '_' + 'contracts_value_amount') value = data.value.amount;
+                else value = data.fields[f.replace(/\./g, '_')];
+                if(!node.hasOwnProperty(fieldName)) {
+                    node[fieldName] = value;
+                }
+                else node[fieldName] += value;
+            } );
+            break;
+        case 'limited-party-accumulator-percent':
+            rule.fields.map( f => {
+                let fieldName = rule.id + '_' + f.replace(/\./g, '_');
+                if(!node.hasOwnProperty(fieldName)) {
+                    node[fieldName] = 1;
+                }
+                else node[fieldName] += 1;
+            } );
+            break;
+        case 'limited-party-accumulator-count':
+        case 'limited-accumulator-percent':
+            rule.fields.map( f => {
+                let fieldName = rule.id + '_' + f.replace(/\./g, '_');
+                let value = '';
+                if(fieldName == rule.id + '_' + 'contracts_value_amount') value = data.value.amount;
+                else value = data.fields[f.replace(/\./g, '_')];
+                if(!node.hasOwnProperty(fieldName)) node[fieldName] = {};
+                if(!node[fieldName].hasOwnProperty(value)) node[fieldName][value] = 0;
+                node[fieldName][value]++;
+                // console.log(node);
+            } );
+            break;
+    }
 }
 
 function addBranch(roots, branch_id, parent_id) {
@@ -269,13 +303,13 @@ function newYearObj() {
     return {
         c_c: 0,
         c_a: 0,
-        titles: {},
-        amounts: {},
-        dates: {},
-        direct: {
-            c_c: 0,
-            c_a: 0
-        }
+        // titles: {},
+        // amounts: {},
+        // dates: {},
+        // direct: {
+        //     c_c: 0,
+        //     c_a: 0
+        // }
     }
 }
 

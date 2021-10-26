@@ -253,9 +253,8 @@ function evaluateNodeFlags(roots, nodeScores, flags) {
         // console.log("supplierIDs",supplierIDs);
 
         evaluateNode([ucID], nodeScores, flags, supplierIDs, branch);
-        if (dependenciaID) {
+        if (dependenciaID)
             evaluateNode([dependenciaID], nodeScores, flags, supplierIDs, branch);
-        }
         evaluateNode(supplierIDs, nodeScores, flags, supplierIDs, branch);
 
         // console.log("evaluateNodeFlags",nodeScores);
