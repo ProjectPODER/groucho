@@ -252,10 +252,10 @@ function evaluateNodeFlags(roots, nodeScores, flags) {
 
         // console.log("supplierIDs",supplierIDs);
 
-        evaluateNode([ucID], nodeScores, flags, supplierIDs, branch);
+        evaluateNode([ucID], nodeScores, flags, supplierIDs, branch, 'buyer');
         if (dependenciaID)
-            evaluateNode([dependenciaID], nodeScores, flags, supplierIDs, branch);
-        evaluateNode(supplierIDs, nodeScores, flags, supplierIDs, branch);
+            evaluateNode([dependenciaID], nodeScores, flags, supplierIDs, branch, 'buyer');
+        evaluateNode(supplierIDs, nodeScores, flags, [ucID], branch, 'supplier'); // TODO: será que el segundo supplierIDs debe ser el ucID??
 
         // console.log("evaluateNodeFlags",nodeScores);
 
@@ -267,7 +267,7 @@ function evaluateNodeFlags(roots, nodeScores, flags) {
     return nodeScores;
 }
 
-function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch) {
+function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch, entity_type) {
     // console.log("evaluateNode",nodeIDs);
 
     nodeIDs.map(nodeID => {
@@ -275,15 +275,14 @@ function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch) {
             console.log("evaluateNode: Uninitialized node",nodeID)
             return;
         }
-        nodeScores[nodeID].num_parties ++
+        nodeScores[nodeID].num_parties++;
 
         let branch_years = Object.keys(branch.years);
-        // console.log("evaluateNode",branch_years)
 
         // Iterate flags
         flags.map( (flag) => {
             branch_years.map(year => {
-                let flagScore = getNodeFlagScore(nodeScores, flag, supplierIDs,branch,year);
+                let flagScore = getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year, entity_type);
                 //Add value to party
                 // console.log(nodeID,year,flagScore,flag.id);
                 nodeScores[nodeID].node_rules[flag.id] = accumulativeAverage(nodeScores[nodeID].node_rules[flag.id], nodeScores[nodeID].num_parties, flagScore, nodeScores[nodeID].num_parties);
@@ -323,11 +322,11 @@ function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch) {
 
 }
 
-function getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year) {
+function getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year, entity_type) {
     switch(flag.flagType) {
         case "reliability":
             // "id": "conf-index",
-            return partyGlobalReliability(supplierIDs, nodeScores, 'total_score');
+            return partyGlobalReliability(supplierIDs, nodeScores, 'total_score', entity_type);
 
         case "limited-accumulator-percent":
             // "id": "comp-ncap",
@@ -335,22 +334,21 @@ function getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year) {
                 // repeatedAmount(branch,year);
             // "id": "traz-trc",
                 // repeatedTitle(branch, year);
-            return limitedAccumulatorPercent(branch,year,flag.field,flag.limit,flag.field,flag.limit,flag.minimum_contract_count)
+            return limitedAccumulatorPercent(branch, year, flag);
 
         case "limited-party-accumulator-count":
             // "id": "traz-cd",
-            return limitedPartyAccumulatorCount(branch,year,flag.field,flag.limit,flag.minimum_contract_count)
+            return limitedPartyAccumulatorCount(branch, year, flag);
 
         case "limited-party-accumulator-percent":
             // "id": "comp-aepc",
                 // return predominantEconomicAgentCount(branch,year,flag.field,flag.limit)
-            return limitedPartyAccumulatorPercent(branch,year,flag.field,flag.limit,flag.minimum_contract_count);
-
+            return limitedPartyAccumulatorPercent(branch, year, flag, nodeScores, supplierIDs, entity_type);
 
         case "limited-party-summer-percent":
             // "id": "comp-aepm",
                 // return predominantEconomicAgentAmount(branch,year,flag.field,flag.limit)
-            return limitedPartySummerPercent(branch,year,flag.field,flag.limit,flag.minimum_contract_count)
+            return limitedPartySummerPercent(branch, year, flag, nodeScores, supplierIDs, entity_type);
         default:
             //TODO: Estas falta definir el tipo, son de mexico
             switch(flag.id) {
@@ -373,7 +371,7 @@ function getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year) {
 // ---------- CONFIABILIDAD GLOBAL ----------
 
 // Promediar total_scores de todos los suppliers de esta UC, y calcular confiabilidad para los suppliers en el mismo loop
-function partyGlobalReliability(supplierIDs,partyScores,flag_field) {
+function partyGlobalReliability(supplierIDs, partyScores, flag_field, entity) {
     let supplier_total_score = 0;
 
     supplierIDs.map( (id) => {
@@ -383,7 +381,7 @@ function partyGlobalReliability(supplierIDs,partyScores,flag_field) {
             if (partyScores[id].contract_categories[flag_field]) {
                 supplier_total_score += partyScores[id].contract_categories[flag_field];
             }
-            //This case is for dependencias
+            //This case is for buyers
             else if (partyScores[id].node_rules && partyScores[id].node_rules.conf) {
                 supplier_total_score = partyScores[id].nodeScore.conf
             }
@@ -393,109 +391,124 @@ function partyGlobalReliability(supplierIDs,partyScores,flag_field) {
     return supplier_total_score / supplierIDs.length;
 }
 
-function limitedAccumulatorPercent(branch,year,flag_field,flag_limit, minimum_contract_count) {
-    // return repeatedAmount(branch,year,flag_field,flag_limit);
+function limitedAccumulatorPercent(branch, year, flag) {
+    let threshold = flag.limit;
+    let minimum = flag.minimum_contract_count? flag.minimum_contract_count : 0;
+    let contract_count = branch.years[year].c_c;
+    let result = 1;
 
-    let mcr10_threshhold = flag_limit;
+    if(contract_count >= flag.minimum_contract_count) {
+        flag.fields.map( field => {
+            let fieldName = flag.id + '_' + field.replace(/\./g, '_');
 
-    //TODO: use flag_field
-    let buyer_year_amount_count = branch.years[year].c_c;
-
-    seen = false;
-    let result = { score: 1 };
-    if(buyer_year_amount_count > minimum_contract_count) {
-        for(var a in branch.years[year].amounts) {
-            if( branch.years[year].amounts[a] >= buyer_year_amount_count * mcr10_threshhold ) {
-                result = {
-                    amount: a,
-                    value: branch.years[year].amounts[a] / buyer_year_amount_count,
-                    score: 0
-                };
-                seen = true;
-            }
-        }
-    }
-    // if(!seen) mcr10_acc++;
-
-    return result.score;
-}
-
-function limitedPartyAccumulatorCount(branch,year,flag_field,flag_limit, minimum_contract_count) {
-    let aepc_threshhold = flag_limit; // More than aepm_threshhold % of contract amounts to same supplier
-
-    //TODO: Use flag_field
-    let supplier_year_counts = getSupplierYearCounts(branch, year);
-    let buyer_year_count = branch.years[year].c_c;
-
-    let result = { score: 1 };
-    if(supplier_year_counts.length > minimum_contract_count) {
-        seen = false;
-        supplier_year_counts.map( (s) => {
-            if(s.count >= buyer_year_count * aepc_threshhold) {
-                result = {
-                    supplier: s.id,
-                    value: s.count > aepc_threshhold,
-                    score: 0
-                };
-                seen = true;
-            }
-        } );
-        // if(!seen) aepc_acc++;
-
-    }
-    return result.score;
-}
-
-function limitedPartyAccumulatorPercent(branch,year,flag_field,flag_limit, minimum_contract_count) {
-    // return predominantEconomicAgentCount(branch,year,flag_field,flag_limit)
-    let aepc_threshhold = flag_limit; // More than aepm_threshhold % of contract amounts to same supplier
-
-    //TODO: Use flag_field
-    let supplier_year_counts = getSupplierYearCounts(branch, year);
-    let buyer_year_count = branch.years[year].c_c;
-
-    let result = { score: 1 };
-    if(supplier_year_counts.length > minimum_contract_count) {
-        seen = false;
-        supplier_year_counts.map( (s) => {
-            if(s.count >= buyer_year_count * aepc_threshhold) {
-                result = {
-                    supplier: s.id,
-                    value: s.count / buyer_year_count,
-                    score: 0
-                };
-                seen = true;
-            }
-        } );
-        // if(!seen) aepc_acc++;
-    }
-
-    return result.score;
-}
-
-function limitedPartySummerPercent(branch,year,flag_field,flag_limit,minimum_contract_count) {
-    // return predominantEconomicAgentAmount(branch,year,flag_field,flag_limit)
-
-    let aepm_threshhold = flag_limit; // More than aepm_threshhold % of contract amounts to same supplier
-
-    //TODO: este método tiene que traer flag_field
-    let supplier_year_amounts = getSupplierYearAmounts(branch, year);
-    let buyer_year_total = branch.years[year].c_a;
-
-    let score_object = { score: 1 };
-    if(supplier_year_amounts.length > minimum_contract_count) {
-        supplier_year_amounts.map( (s) => {
-            if(s.amount >= buyer_year_total * aepm_threshhold) {
-                score_object = {
-                    supplier: s.id,
-                    value: s.amount / buyer_year_total,
-                    score: 0
-                };
-            }
+            Object.keys( branch.years[year][fieldName] ).map( key => {
+                let value = branch.years[year][fieldName][key];
+                let target = (contract_count * threshold) / 100;
+                if(value >= target) return 0;
+            } )
         } );
     }
 
-    return score_object.score;
+    return result;
+}
+
+function limitedPartyAccumulatorCount(branch, year, flag) {
+    let threshold = flag.limit;
+    let result = 1;
+
+    flag.fields.map( field => {
+        let fieldName = flag.id + '_' + field.replace(/\./g, '_');
+        let count = Object.keys( branch.years[year][fieldName] ).length;
+        if(count > threshold) return 0;
+    } );
+
+    return result;
+}
+
+function limitedPartyAccumulatorPercent(branch, year, flag, nodeScores, supplierIDs, entity_type) {
+    let threshold = flag.limit;
+    let result = 1;
+    let contract_count = branch.years[year].c_c;
+
+    if(entity_type == 'supplier') {
+        nodeScores[branch.id].years.map( y => {
+            if( y.year == year) return y.node_rules[flag.id];
+        } )
+    }
+    else if(entity_type == 'buyer') {
+        flag.fields.map( f => {
+            let fieldName = flag.id + '_' + f.replace(/\./g, '_');
+            supplierIDs.map( supplier => {
+                if(branch.children[supplier].years[year]) {
+                    let supplier_cc = branch.children[supplier].years[year][fieldName];
+                    if( supplier_cc > (contract_count * threshold) / 100 ) {
+                        // Asignar el score al supplier
+                        nodeScores[supplier].years.map( y => {
+                            if(y.year == year) {
+                                if( !y.node_rules ) y.node_rules = {};
+                                y.node_rules[flag.id] = 0;
+                            }
+                        } )
+                        // Ya encontramos un supplier que rompe la regla
+                        result = 0;
+                    }
+                    nodeScores[supplier].years.map( y => {
+                        if(y.year == year) {
+                            if( !y.node_rules ) y.node_rules = {};
+                            y.node_rules[flag.id] = 1;
+                        }
+                    } );
+                }
+            } );
+        } );
+
+        return result;
+    }
+
+    return result;
+}
+
+function limitedPartySummerPercent(branch, year, flag, nodeScores, supplierIDs, entity_type) {
+    let threshold = flag.limit;
+    let result = 1;
+    let contract_amount = branch.years[year].c_a;
+
+    if(entity_type == 'supplier') {
+        nodeScores[branch.id].years.map( y => {
+            if( y.year == year) return y.node_rules[flag.id];
+        } )
+    }
+    else if(entity_type == 'buyer') {
+        flag.fields.map( f => {
+            let fieldName = flag.id + '_' + f.replace(/\./g, '_');
+            supplierIDs.map( supplier => {
+                if(branch.children[supplier].years[year]) {
+                    let supplier_ca = branch.children[supplier].years[year][fieldName];
+                    if( supplier_ca > (contract_amount * threshold) / 100 ) {
+                        // Asignar el score al supplier
+                        nodeScores[supplier].years.map( y => {
+                            if(y.year == year) {
+                                if( !y.node_rules ) y.node_rules = {};
+                                y.node_rules[flag.id] = 0;
+                            }
+                        } )
+                        // Ya encontramos un supplier que rompe la regla
+                        result = 0;
+                    }
+                    nodeScores[supplier].years.map( y => {
+                        if(y.year == year) {
+                            if( !y.node_rules ) y.node_rules = {};
+                            y.node_rules[flag.id] = 1;
+                        }
+                    } );
+                }
+            } );
+        } );
+
+        return result;
+    }
+
+    return result;
 }
 
 
