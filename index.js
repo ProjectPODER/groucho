@@ -123,9 +123,9 @@ function evaluateParties(client) {
             // console.log( JSON.stringify(nodeScores, null, 4) );
             // console.log('Node flags done.');
 
-            // Insert PARTY_FLAGS to DB:
-            // Split into n=chunkSize chunks
-            // Send chunks to DB for insertion
+            // Stream out party flags:
+            // - Split into n=chunkSize chunks
+            // - Process & output chunks
             parties = 0;
             partyChunk = [];
             for(var partyID in partyScores) {
@@ -136,7 +136,6 @@ function evaluateParties(client) {
                     let party_flags = getPartyNodeSummary(partyChunk, nodeScores);
 
                     party_flags.map(party_flag => {
-                        //TODO: Check duplicated output
                         console.log(JSON.stringify(party_flag));
                     })
 
