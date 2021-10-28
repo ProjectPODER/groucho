@@ -71,7 +71,7 @@ function evaluateParties(client) {
         match_all: {}
     };
     if(args.test) { // Use the -t flag to test a single record by ocid
-        query = { 'ocid': args.test }
+        query = { 'parties.id': args.test }
     }
 
     let batch_size = args.size;
@@ -105,8 +105,8 @@ function evaluateParties(client) {
                             contract_categories: party.contract_score,
                             contract_rules: party.contract_rules,
                             years: party.years,
-                            node_rules: partyScoreCriteriaObj,
-                            node_categories: partyCriteriaObj,
+                            node_rules: JSON.parse(JSON.stringify(partyScoreCriteriaObj)),
+                            node_categories: JSON.parse(JSON.stringify(partyCriteriaObj)),
                             category_score: {},
                             num_parties: 0,
                             total_score: 0
@@ -118,9 +118,7 @@ function evaluateParties(client) {
             }
 
             // console.log('Evaluating node flags.');
-
             let nodeScores = evaluateNodeFlags(orgTree.roots, partyScores, flags.party_rules);
-            // console.log( JSON.stringify(nodeScores, null, 4) );
             // console.log('Node flags done.');
 
             // Stream out party flags:
