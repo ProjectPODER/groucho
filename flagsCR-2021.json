@@ -313,19 +313,6 @@
             }
         },
         {
-            "id": "temp-fp",
-            "category": "Temporalidad",
-            "name": "Fechas en el pasado (varía por dataset)",
-            "type": "date-difference-bool",
-            "difference":{
-                "maximum": 0
-            },
-            "fields": {
-                "from": "contracts.dateSigned",
-                "to": "contracts.period.startDate"
-            }
-        },
-        {
             "id": "temp-fpn",
             "category": "Temporalidad",
             "name": "Fecha de firma previa a fecha de notificación",

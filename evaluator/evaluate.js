@@ -155,6 +155,7 @@ function evaluateFlags(rawRecord, record, flags, partyFields, flagCollectionObj)
             var role = party.hasOwnProperty('role')? party.role : party.roles[0];
             var partyObj = {
                 id: party.id,
+                name: party.name,
                 entity: role
             }
 
@@ -237,7 +238,7 @@ function evaluateFlags(rawRecord, record, flags, partyFields, flagCollectionObj)
 
 function evaluateNodeFlags(roots, nodeScores, flags) {
     // let nodeScores = {};
-
+    // console.log(JSON.stringigy(nodeScores['instituto-costarricense-de-investigacion-y-ensenanza-en-nutricion-y-salud']));
     for(var rootID in roots) {
         let branch = roots[rootID];
 
@@ -249,14 +250,15 @@ function evaluateNodeFlags(roots, nodeScores, flags) {
             if(childID)
                 supplierIDs.push( branch.children[childID].id );
         }
+        // TODO: faltan areas...
 
         // console.log("supplierIDs",supplierIDs);
 
         evaluateNode([ucID], nodeScores, flags, supplierIDs, branch, 'buyer');
-        if (dependenciaID)
+        if (dependenciaID) {
             evaluateNode([dependenciaID], nodeScores, flags, supplierIDs, branch, 'buyer');
-        evaluateNode(supplierIDs, nodeScores, flags, [ucID], branch, 'supplier'); // TODO: será que el segundo supplierIDs debe ser el ucID??
-
+        }
+        evaluateNode(supplierIDs, nodeScores, flags, [ucID], branch.children, 'supplier');
         // console.log("evaluateNodeFlags",nodeScores);
 
         // Cleanup...
@@ -268,8 +270,6 @@ function evaluateNodeFlags(roots, nodeScores, flags) {
 }
 
 function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch, entity_type) {
-    // console.log("evaluateNode",nodeIDs);
-
     nodeIDs.map(nodeID => {
         if (!nodeScores[nodeID]) {
             console.log("evaluateNode: Uninitialized node",nodeID)
@@ -277,49 +277,34 @@ function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch, entity_ty
         }
         nodeScores[nodeID].num_parties++;
 
-        let branch_years = Object.keys(branch.years);
+        let evaluatedBranch = null;
+        if(entity_type == 'supplier') evaluatedBranch = branch[nodeID];
+        else evaluatedBranch = branch;
+        let branch_years = Object.keys(evaluatedBranch.years);
 
         // Iterate flags
         flags.map( (flag) => {
+            let yearsProcessed = 0;
             branch_years.map(year => {
-                let flagScore = getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year, entity_type);
+                let flagScore = getNodeFlagScore(nodeScores, flag, supplierIDs, evaluatedBranch, year, entity_type);
+
                 //Add value to party
-                // console.log(nodeID,year,flagScore,flag.id);
-                nodeScores[nodeID].node_rules[flag.id] = accumulativeAverage(nodeScores[nodeID].node_rules[flag.id], nodeScores[nodeID].num_parties, flagScore, nodeScores[nodeID].num_parties);
+                nodeScores[nodeID].node_rules[flag.id] = accumulativeAverage(nodeScores[nodeID].node_rules[flag.id], yearsProcessed, flagScore, 1);
 
-                // console.log("evaluateNode",nodeScores[nodeID]);
-                //Add value to years
-
-                //Is this year already added to the nodeScores for this node?
-                let yearValue = {}
-                let currentYear = null;
                 nodeScores[nodeID].years.map((yearObj) => {
                     if (yearObj.year == year) {
-                        currentYear = yearObj;
+                        if(!yearObj.node_rules) yearObj.node_rules = {};
+                        if(!yearObj.node_rules[flag.id]) yearObj.node_rules[flag.id] = 0;
+                        yearObj.node_rules[flag.id] = flagScore;
                     }
                 });
 
-                if (currentYear) {
-                    if (!currentYear.node_rules) currentYear.node_rules = {};
-                    if(!currentYear.node_rules[flag.id]) currentYear.node_rules[flag.id] = 0;
-                    currentYear.node_rules[flag.id] = accumulativeAverage(currentYear.node_rules[flag.id], nodeScores[nodeID].num_parties, flagScore, nodeScores[nodeID].num_parties);
-                }
-                else {
-                    yearValue = {
-                        node_rules: {
-                            [flag.id]: flagScore
-                        },
-                        year: year
-                    };
-                    nodeScores[nodeID].years.push(yearValue);
-                }
-
-            })
-
+                yearsProcessed++;
+            });
         } );
-
-    })
-
+    });
+    // console.log(entity_type, 'instituto-costarricense-de-investigacion-y-ensenanza-en-nutricion-y-salud', JSON.stringify(nodeScores['instituto-costarricense-de-investigacion-y-ensenanza-en-nutricion-y-salud'].node_rules['traz-trc5']));
+    // console.log(entity_type, 'vimat-sociedad-anonima', JSON.stringify(nodeScores['vimat-sociedad-anonima'].node_rules['traz-trc5']));
 }
 
 function getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year, entity_type) {
@@ -373,7 +358,7 @@ function getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year, entity_ty
 // Promediar total_scores de todos los suppliers de esta UC, y calcular confiabilidad para los suppliers en el mismo loop
 function partyGlobalReliability(supplierIDs, partyScores, flag_field, entity) {
     let supplier_total_score = 0;
-
+    // Hay que revisar esta función. Calcularla por año? Calcularla toda de un solo? Si es por año, filtrar suppliers por los que tengan contratos en ese año
     supplierIDs.map( (id) => {
         if(partyScores[id]) {
             //This case is for suppliers
@@ -404,7 +389,7 @@ function limitedAccumulatorPercent(branch, year, flag) {
             Object.keys( branch.years[year][fieldName] ).map( key => {
                 let value = branch.years[year][fieldName][key];
                 let target = (contract_count * threshold) / 100;
-                if(value >= target) return 0;
+                if(value >= target) result = 0;
             } )
         } );
     }
@@ -419,7 +404,7 @@ function limitedPartyAccumulatorCount(branch, year, flag) {
     flag.fields.map( field => {
         let fieldName = flag.id + '_' + field.replace(/\./g, '_');
         let count = Object.keys( branch.years[year][fieldName] ).length;
-        if(count > threshold) return 0;
+        if(count > threshold) result = 0;
     } );
 
     return result;
@@ -432,8 +417,9 @@ function limitedPartyAccumulatorPercent(branch, year, flag, nodeScores, supplier
 
     if(entity_type == 'supplier') {
         nodeScores[branch.id].years.map( y => {
-            if( y.year == year) return y.node_rules[flag.id];
+            if( y.year == year) result = y.node_rules[flag.id];
         } )
+        return result;
     }
     else if(entity_type == 'buyer') {
         flag.fields.map( f => {
@@ -461,8 +447,6 @@ function limitedPartyAccumulatorPercent(branch, year, flag, nodeScores, supplier
                 }
             } );
         } );
-
-        return result;
     }
 
     return result;
@@ -475,8 +459,9 @@ function limitedPartySummerPercent(branch, year, flag, nodeScores, supplierIDs, 
 
     if(entity_type == 'supplier') {
         nodeScores[branch.id].years.map( y => {
-            if( y.year == year) return y.node_rules[flag.id];
+            if( y.year == year) result = y.node_rules[flag.id];
         } )
+        return result;
     }
     else if(entity_type == 'buyer') {
         flag.fields.map( f => {

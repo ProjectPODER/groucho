@@ -134,6 +134,19 @@ function getContractCriteriaSummary(collection, criteriaObj, ruleset_id) {
             value: item.value,
             fields: item.fields
         };
+
+        item.parties.map( party => {
+            let partyBaseObj = {
+                id: party.id,
+                name: party.name
+            }
+            if(party.parent)
+                Object.assign(partyBaseObj, { parent: party.parent })
+            contractFlagObj[party.entity] = partyBaseObj;
+        } );
+        console.log(contractFlagObj);
+        process.exit(1);
+
         let contract_score = JSON.parse(tempCriteriaObj);
 
         Object.assign(contractFlagObj, { contract_score });
