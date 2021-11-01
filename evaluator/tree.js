@@ -4,7 +4,7 @@ function createOrgTree() {
     }
 }
 
-function updateOrgTree(roots, contract, parties, party_rules) {
+function updateOrgTree(tree, contract, parties, party_rules) {
     // Data from contracts:
     //      dependencyID
     //      ucID
@@ -18,6 +18,9 @@ function updateOrgTree(roots, contract, parties, party_rules) {
     //              date
     //              title
     //              amount
+    let roots = tree.roots;
+    if(!tree.hasOwnProperty('globals')) tree.globals = {};
+    let globals = tree.globals;
     let data = extractDataFromContract(contract);
     // TODO: refactor
     // Funders and buyer in the same roots array
@@ -94,98 +97,16 @@ function updateOrgTree(roots, contract, parties, party_rules) {
         party_rules.map( rule => {
             // - According to flag, accumulate in the proper way
             // - - First for buyer
-            updatePartyFlagData(branch.years[year_index], supplier.contract.source, rule);
+            updatePartyFlagData(globals, branch.id, branch.years[year_index], supplier.contract.source, rule);
             // - - Then for supplier
-            updatePartyFlagData(leaf.years[year_index], supplier.contract.source, rule);
+            updatePartyFlagData(globals, leaf.id, leaf.years[year_index], supplier.contract.source, rule);
             // - - Finally for funders/areas
             f_branches.map( (f) => {
-                updatePartyFlagData(f.years[year_index], supplier.contract.source, rule);
+                updatePartyFlagData(globals, f.id, f.years[year_index], supplier.contract.source, rule);
                 // Update contract count and amount for this supplier
-                updatePartyFlagData(f.children[supplier.id].years[year_index], supplier.contract.source, rule);
+                updatePartyFlagData(globals, f.children[supplier.id].id, f.children[supplier.id].years[year_index], supplier.contract.source, rule);
             } );
         } );
-
-        let title_index = supplier.contract.title;
-        // // Update title count for this buyer
-        // if( !branch.years[year_index].titles[title_index] )
-        //     branch.years[year_index].titles[title_index] = 1;
-        // else
-        //     branch.years[year_index].titles[title_index]++;
-        // // Update title count for this supplier
-        // if( !leaf.years[year_index].titles[title_index] )
-        //     leaf.years[year_index].titles[title_index] = 1;
-        // else
-        //     leaf.years[year_index].titles[title_index]++;
-        // // Update title count for funders
-        // f_branches.map( (f) => {
-        //     if( !f.years[year_index].titles[title_index] )
-        //         f.years[year_index].titles[title_index] = 1;
-        //     else
-        //         f.years[year_index].titles[title_index]++;
-        //     // Update title count for this supplier
-        //     if( !f.children[supplier.id].years[year_index].titles[title_index] )
-        //         f.children[supplier.id].years[year_index].titles[title_index] = 1;
-        //     else
-        //         f.children[supplier.id].years[year_index].titles[title_index]++;
-        // } );
-
-        let amount_index = supplier.contract.amount.toString();
-        // // Update amount count for this buyer and amount
-        // if( !branch.years[year_index].amounts[amount_index] )
-        //     branch.years[year_index].amounts[amount_index] = 1;
-        // else
-        //     branch.years[year_index].amounts[amount_index]++;
-        // // Update amount count for this supplier and amount
-        // if( !leaf.years[year_index].amounts[amount_index] )
-        //     leaf.years[year_index].amounts[amount_index] = 1;
-        // else
-        //     leaf.years[year_index].amounts[amount_index]++;
-        // // Update amount count for funders
-        // f_branches.map( (f) => {
-        //     if( !f.years[year_index].amounts[amount_index] )
-        //         f.years[year_index].amounts[amount_index] = 1;
-        //     else
-        //         f.years[year_index].amounts[amount_index]++;
-        //     // Update amount count for this supplier and amount
-        //     if( !f.children[supplier.id].years[year_index].amounts[amount_index] )
-        //         f.children[supplier.id].years[year_index].amounts[amount_index] = 1;
-        //     else
-        //         f.children[supplier.id].years[year_index].amounts[amount_index]++;
-        // } );
-
-        // if( data.procMethod == 'direct' || data.procMethod == 'limited' ) {
-        //     // Update direct procurement count and amount for this buyer
-        //     branch.years[year_index].direct.c_c++;
-        //     branch.years[year_index].direct.c_a += parseFloat(supplier.contract.amount);
-        //
-        //     // Update direct procurement count and amount for this supplier
-        //     leaf.years[year_index].direct.c_c++;
-        //     leaf.years[year_index].direct.c_a += parseFloat(supplier.contract.amount);
-        //
-        //     // Update direct procurement count and amount for funders
-        //     f_branches.map( (f) => {
-        //         f.years[year_index].direct.c_c++;
-        //         f.years[year_index].direct.c_a += parseFloat(supplier.contract.amount);
-        //
-        //         // Update direct procurement count and amount for this supplier
-        //         f.children[supplier.id].years[year_index].direct.c_c++;
-        //         f.children[supplier.id].years[year_index].direct.c_a += parseFloat(supplier.contract.amount);
-        //     } );
-        // }
-
-        // let date_index = supplier.contract.date;
-        // // Finally, update the date counter for the buyer
-        // if( !branch.years[year_index].dates[date_index] )
-        //     branch.years[year_index].dates[date_index] = 1;
-        // else
-        //     branch.years[year_index].dates[date_index]++;
-        // // And update the date counter for the buyer
-        // f_branches.map( (f) => {
-        //     if( !f.years[year_index].dates[date_index] )
-        //         f.years[year_index].dates[date_index] = 1;
-        //     else
-        //         f.years[year_index].dates[date_index]++;
-        // } );
 
         branch.children[supplier.id] = leaf;
     } );
@@ -244,7 +165,7 @@ function getSupplierIDs(awards, awardID) {
     return award[0].suppliers;
 }
 
-function updatePartyFlagData(node, data, rule) {
+function updatePartyFlagData(globals, nodeID, node, data, rule) {
     switch(rule.flagType) {
         case 'limited-party-summer-percent':
             rule.fields.map( f => {
@@ -273,11 +194,18 @@ function updatePartyFlagData(node, data, rule) {
                 let fieldName = rule.id + '_' + f.replace(/\./g, '_');
                 let value = '';
                 if(fieldName == rule.id + '_' + 'contracts_value_amount') value = data.value.amount;
+                else if(fieldName == rule.id + '_' + 'contracts_period_startDate') value = data.fields[f.replace(/\./g, '_')].split('T')[0];
                 else value = data.fields[f.replace(/\./g, '_')];
                 if(!node.hasOwnProperty(fieldName)) node[fieldName] = {};
                 if(!node[fieldName].hasOwnProperty(value)) node[fieldName][value] = 0;
                 node[fieldName][value]++;
-                // console.log(node);
+                // Check if value should be accumulated globally
+                if(rule.global === true) {
+                    if(!globals.hasOwnProperty(nodeID)) globals[nodeID] = {};
+                    if(!globals[nodeID].hasOwnProperty(fieldName)) globals[nodeID][fieldName] = {};
+                    if(!globals[nodeID][fieldName].hasOwnProperty(value)) globals[nodeID][fieldName][value] = 0;
+                    globals[nodeID][fieldName][value]++;
+                }
             } );
             break;
     }

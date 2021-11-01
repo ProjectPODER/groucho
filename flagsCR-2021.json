@@ -696,6 +696,7 @@
             "category": "Trazabilidad",
             "name": "Cédula dupicada",
             "limit": [1],
+            "global": true,
             "type": "limited-party-accumulator-count",
             "fields": ["parties.identifier.id"]
         },
@@ -704,6 +705,7 @@
             "category": "Competitividad",
             "name": "NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO",
             "limit": [3,5,10],
+            "minimum_contract_count": 10,
             "fields": ["contracts.period.startDate"],
             "type": "limited-accumulator-percent"
         }
