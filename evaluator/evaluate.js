@@ -219,7 +219,6 @@ function evaluateFlags(rawRecord, record, flags, partyFields, flagCollectionObj)
         // Iterate flags
         flags.map( (flag) => {
             let flagScore = getFlagScore(rawRecord, contract, flag);
-            // console.log(flag.id, flagScore);
             contratoFlags.flags[flag.categoryID][flag.id].push({ year: year, score: flagScore });
         } );
 
@@ -236,9 +235,10 @@ function evaluateFlags(rawRecord, record, flags, partyFields, flagCollectionObj)
     return results;
 }
 
-function evaluateNodeFlags(roots, nodeScores, flags) {
+function evaluateNodeFlags(tree, nodeScores, flags) {
     // let nodeScores = {};
-    // console.log(JSON.stringigy(nodeScores['instituto-costarricense-de-investigacion-y-ensenanza-en-nutricion-y-salud']));
+    let roots = tree.roots;
+    let globals = tree.globals || {};
     for(var rootID in roots) {
         let branch = roots[rootID];
 
@@ -250,16 +250,12 @@ function evaluateNodeFlags(roots, nodeScores, flags) {
             if(childID)
                 supplierIDs.push( branch.children[childID].id );
         }
-        // TODO: faltan areas...
 
-        // console.log("supplierIDs",supplierIDs);
-
-        evaluateNode([ucID], nodeScores, flags, supplierIDs, branch, 'buyer');
+        evaluateNode([ucID], nodeScores, flags, supplierIDs, branch, globals, 'buyer');
         if (dependenciaID) {
-            evaluateNode([dependenciaID], nodeScores, flags, supplierIDs, branch, 'buyer');
+            evaluateNode([dependenciaID], nodeScores, flags, supplierIDs, branch, globals, 'buyer');
         }
-        evaluateNode(supplierIDs, nodeScores, flags, [ucID], branch.children, 'supplier');
-        // console.log("evaluateNodeFlags",nodeScores);
+        evaluateNode(supplierIDs, nodeScores, flags, [ucID], branch.children, globals, 'supplier');
 
         // Cleanup...
         branch = null;
@@ -269,33 +265,40 @@ function evaluateNodeFlags(roots, nodeScores, flags) {
     return nodeScores;
 }
 
-function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch, entity_type) {
+function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch, globals, entity_type) {
     nodeIDs.map(nodeID => {
         if (!nodeScores[nodeID]) {
             console.log("evaluateNode: Uninitialized node",nodeID)
             return;
         }
         nodeScores[nodeID].num_parties++;
+        if(!nodeScores[nodeID].hasOwnProperty('yearsSeen')) nodeScores[nodeID].yearsSeen = [];
 
         let evaluatedBranch = null;
         if(entity_type == 'supplier') evaluatedBranch = branch[nodeID];
         else evaluatedBranch = branch;
         let branch_years = Object.keys(evaluatedBranch.years);
+        let globalData = null;
+        if(globals.hasOwnProperty(nodeID)) globalData = globals[nodeID];
 
         // Iterate flags
         flags.map( (flag) => {
             let yearsProcessed = 0;
             branch_years.map(year => {
-                let flagScore = getNodeFlagScore(nodeScores, flag, supplierIDs, evaluatedBranch, year, entity_type);
+                if(nodeScores[nodeID].yearsSeen.indexOf(year) < 0) nodeScores[nodeID].yearsSeen.push(year);
+                let flagScore = getNodeFlagScore(nodeScores, flag, supplierIDs, evaluatedBranch, year, globalData, entity_type);
 
                 //Add value to party
-                nodeScores[nodeID].node_rules[flag.id] = accumulativeAverage(nodeScores[nodeID].node_rules[flag.id], yearsProcessed, flagScore, 1);
-
+                nodeScores[nodeID].node_rules[flag.id] = accumulativeAverage(nodeScores[nodeID].node_rules[flag.id], nodeScores[nodeID].yearsSeen.length-1, flagScore, 1);
                 nodeScores[nodeID].years.map((yearObj) => {
                     if (yearObj.year == year) {
-                        if(!yearObj.node_rules) yearObj.node_rules = {};
-                        if(!yearObj.node_rules[flag.id]) yearObj.node_rules[flag.id] = 0;
-                        yearObj.node_rules[flag.id] = flagScore;
+                        if(!yearObj.hasOwnProperty('node_rules')) yearObj.node_rules = {};
+
+                        // En esta condición, a la bandera se le asigna un valor para ese año cuando no ha sido vista antes,
+                        // pero si ya ha sido vista solamente se le asigna un valor si el valor viejo es 1.
+                        // De esta manera no es posible pasar a 1 una bandera que estaba en 0, pero sí lo contrario.
+                        if(!yearObj.node_rules.hasOwnProperty(flag.id)) yearObj.node_rules[flag.id] = flagScore;
+                        else if(yearObj.node_rules[flag.id] == 1) yearObj.node_rules[flag.id] = flagScore;
                     }
                 });
 
@@ -303,15 +306,13 @@ function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch, entity_ty
             });
         } );
     });
-    // console.log(entity_type, 'instituto-costarricense-de-investigacion-y-ensenanza-en-nutricion-y-salud', JSON.stringify(nodeScores['instituto-costarricense-de-investigacion-y-ensenanza-en-nutricion-y-salud'].node_rules['traz-trc5']));
-    // console.log(entity_type, 'vimat-sociedad-anonima', JSON.stringify(nodeScores['vimat-sociedad-anonima'].node_rules['traz-trc5']));
 }
 
-function getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year, entity_type) {
+function getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year, globalData, entity_type) {
     switch(flag.flagType) {
         case "reliability":
             // "id": "conf-index",
-            return partyGlobalReliability(supplierIDs, nodeScores, 'total_score', entity_type);
+            return partyGlobalReliability(branch, supplierIDs, year, nodeScores, 'total_score', entity_type);
 
         case "limited-accumulator-percent":
             // "id": "comp-ncap",
@@ -323,7 +324,7 @@ function getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year, entity_ty
 
         case "limited-party-accumulator-count":
             // "id": "traz-cd",
-            return limitedPartyAccumulatorCount(branch, year, flag);
+            return limitedPartyAccumulatorCount(branch, year, flag, globalData);
 
         case "limited-party-accumulator-percent":
             // "id": "comp-aepc",
@@ -356,20 +357,17 @@ function getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year, entity_ty
 // ---------- CONFIABILIDAD GLOBAL ----------
 
 // Promediar total_scores de todos los suppliers de esta UC, y calcular confiabilidad para los suppliers en el mismo loop
-function partyGlobalReliability(supplierIDs, partyScores, flag_field, entity) {
+function partyGlobalReliability(branch, supplierIDs, year, partyScores, flag_field, entity) {
     let supplier_total_score = 0;
+
     // Hay que revisar esta función. Calcularla por año? Calcularla toda de un solo? Si es por año, filtrar suppliers por los que tengan contratos en ese año
     supplierIDs.map( (id) => {
         if(partyScores[id]) {
-            //This case is for suppliers
-            // console.log(partyScores[id]);
-            if (partyScores[id].contract_categories[flag_field]) {
-                supplier_total_score += partyScores[id].contract_categories[flag_field];
-            }
-            //This case is for buyers
-            else if (partyScores[id].node_rules && partyScores[id].node_rules.conf) {
-                supplier_total_score = partyScores[id].nodeScore.conf
-            }
+            partyScores[id].years.map(y => {
+                if(y.year == year) {
+                    supplier_total_score += y.contract_score[flag_field];
+                }
+            })
         }
     } );
 
@@ -382,7 +380,7 @@ function limitedAccumulatorPercent(branch, year, flag) {
     let contract_count = branch.years[year].c_c;
     let result = 1;
 
-    if(contract_count >= flag.minimum_contract_count) {
+    if(contract_count >= minimum) {
         flag.fields.map( field => {
             let fieldName = flag.id + '_' + field.replace(/\./g, '_');
 
@@ -397,13 +395,15 @@ function limitedAccumulatorPercent(branch, year, flag) {
     return result;
 }
 
-function limitedPartyAccumulatorCount(branch, year, flag) {
+function limitedPartyAccumulatorCount(branch, year, flag, globalData) {
     let threshold = flag.limit;
     let result = 1;
 
     flag.fields.map( field => {
         let fieldName = flag.id + '_' + field.replace(/\./g, '_');
-        let count = Object.keys( branch.years[year][fieldName] ).length;
+        let count = 0;
+        if(flag.global === true) count = Object.keys( globalData[fieldName] ).length;
+        else count = Object.keys( branch.years[year][fieldName] ).length;
         if(count > threshold) result = 0;
     } );
 

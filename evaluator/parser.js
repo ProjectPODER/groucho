@@ -61,6 +61,7 @@ function parseFlags(file) {
             flagType: rule.type,
             fields: getRuleField(rule, 'fields'),           // VALIDAR
             limit: getRuleField(rule, 'limit'),             // VALIDAR
+            global: getRuleField(rule, 'global'),             // VALIDAR
             minimum_contract_count: getRuleField(rule, 'minimum_contract_count')
         };
 
@@ -100,7 +101,6 @@ function cleanValue(value) {
 }
 
 function getCriteriaObject(flags) {
-    // console.log("getCriteriaObject",flags);
     var criteriaArr = [];
     flags.map( (flag) => {
         if( !criteriaArr.includes(flag.categoryID) ) {
@@ -117,7 +117,6 @@ function getCriteriaObject(flags) {
 }
 
 function getPartyCriteriaObject(flags) {
-    // console.log("getPartyCriteriaObject",flags);
     var criteriaArr = [];
     flags.map( (flag) => {
         if( !criteriaArr.includes(flag.id) ) {

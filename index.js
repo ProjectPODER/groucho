@@ -71,7 +71,7 @@ function evaluateParties(client) {
         match_all: {}
     };
     if(args.test) { // Use the -t flag to test a single record by ocid
-        query = { 'parties.id': args.test }
+        query = { "match_phrase": { "parties.id.keyword": args.test } }
     }
 
     let batch_size = args.size;
@@ -118,7 +118,7 @@ function evaluateParties(client) {
             }
 
             // console.log('Evaluating node flags.');
-            let nodeScores = evaluateNodeFlags(orgTree.roots, partyScores, flags.party_rules);
+            let nodeScores = evaluateNodeFlags(orgTree, partyScores, flags.party_rules);
             // console.log('Node flags done.');
 
             // Stream out party flags:
@@ -190,18 +190,13 @@ async function getContractFlags(client,orgTree,query,batch_size,hit_count) {
             }
 
             evaluation = hit._source;
-            // console.log(evaluation);
 
             evaluation.parties.map( (party) => { // Assign contractScore values to all the parties involved
                 updateFlagCollection(party, partyFlagCollection, evaluation);
             } );
 
             // AQUI BANDERAS NODO Y CONFIABILIDAD
-            updateOrgTree(orgTree.roots, evaluation, evaluation.parties, flags.party_rules);
-
-            // console.log("orgTree",orgTree);
-
-            // contractEvaluations = contractEvaluations.concat(getContractCriteriaSummary([evaluation], flagCriteriaObj,flags.ruleset_id));
+            updateOrgTree(orgTree, evaluation, evaluation.parties, flags.party_rules);
         }
 
         //Todo: Clear scroll
@@ -209,15 +204,13 @@ async function getContractFlags(client,orgTree,query,batch_size,hit_count) {
             response.clear();
         }
     }
+    // console.log(JSON.stringify(orgTree, null, 4));
 }
 
 
 
 function connect(callback) {
-
     const elasticNode = args.database || 'http://localhost:9200/';
-
-
     //We are using self-signed certificaes for elastic
     const client = new Client({ node: elasticNode, ssl: { rejectUnauthorized: false }, resurrectStrategy: "none", compression: "gzip" });
 
