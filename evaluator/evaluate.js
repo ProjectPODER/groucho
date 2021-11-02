@@ -304,14 +304,15 @@ function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch, globals, 
                         }
                         else if(yearObj.node_rules[flag.id] == 1 && flagScore == 0) yearObj.node_rules[flag.id] = flagScore;
                     }
-                    if(yearObj.hasOwnProperty('node_rules') && yearObj.node_rules.hasOwnProperty(flag.id)) {
+                    if(flag.type == 'reliability') nodeScores[nodeID].node_rules[flag.id] = accumulativeAverage(nodeScores[nodeID].node_rules[flag.id], nodeScores[nodeID].numParties, flagScore, 1);
+                    else if(yearObj.hasOwnProperty('node_rules') && yearObj.node_rules.hasOwnProperty(flag.id)) {
                         cumulativeScore += yearObj.node_rules[flag.id];
                         timesSeen++;
                     }
                 });
 
                 // Calculate new average in global node_rules object for this flag
-                nodeScores[nodeID].node_rules[flag.id] = cumulativeScore / timesSeen;
+                if(flag.type != 'reliability') nodeScores[nodeID].node_rules[flag.id] = cumulativeScore / timesSeen;
             });
         } );
     });
@@ -381,7 +382,7 @@ function partyGlobalReliability(branch, supplierIDs, year, partyScores, flag_fie
             })
         }
     } );
-    
+
     return supplier_total_score / seenSuppliers;
 }
 
