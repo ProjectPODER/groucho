@@ -661,7 +661,7 @@
             "id": "comp-aepm",
             "category": "Competitividad",
             "name": "AGENTE ECONOMICO PREPONDERANTE (MONTO)",
-            "limit": [2, 3, 5],
+            "limit": [0.2, 0.3, 0.5],
             "type": "limited-party-summer-percent",
             "fields": ["contracts.value.amount"]
         },
@@ -669,7 +669,8 @@
             "id": "comp-aepc",
             "category": "Competitividad",
             "name": "AGENTE ECONOMICO PREPONDERANTE (CANTIDAD)",
-            "limit": [2, 3, 5],
+            "limit": [0.2, 0.3, 0.5],
+            "accumulator_minimum": 2,
             "type": "limited-party-accumulator-percent",
             "fields": ["id"]
         },
@@ -678,7 +679,8 @@
             "category": "Trazabilidad",
             "name": "TITULO DE CONTRATO REPETIDO",
             "limit": [5,10,15],
-            "minimum_contract_count": 10,
+            "minimum_contract_count": 1,
+            "accumulator_minimum": 3,
             "type": "limited-accumulator-percent",
             "fields": ["contracts.title"]
         },
@@ -687,7 +689,8 @@
             "category": "Trazabilidad",
             "name": "MONTO DE CONTRATO REPETIDO",
             "limit": [5,10,15],
-            "minimum_contract_count": 10,
+            "minimum_contract_count": 1,
+            "accumulator_minimum": 3,
             "type": "limited-accumulator-percent",
             "fields": ["contracts.value.amount"]
         },
@@ -705,7 +708,8 @@
             "category": "Competitividad",
             "name": "NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO",
             "limit": [3,5,10],
-            "minimum_contract_count": 10,
+            "minimum_contract_count": 1,
+            "accumulator_minimum": 2,
             "fields": ["contracts.period.startDate"],
             "type": "limited-accumulator-percent"
         }

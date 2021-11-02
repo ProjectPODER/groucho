@@ -62,7 +62,8 @@ function parseFlags(file) {
             fields: getRuleField(rule, 'fields'),           // VALIDAR
             limit: getRuleField(rule, 'limit'),             // VALIDAR
             global: getRuleField(rule, 'global'),             // VALIDAR
-            minimum_contract_count: getRuleField(rule, 'minimum_contract_count')
+            minimum_contract_count: getRuleField(rule, 'minimum_contract_count'),
+            accumulator_minimum: getRuleField(rule, 'accumulator_minimum')
         };
 
         if(ruleObj.fields && ruleObj.fields.length > 0) {
@@ -97,7 +98,7 @@ function parseFlags(file) {
 
 function cleanValue(value) {
     let valueStr = value.toString();
-    return valueStr.replace('.', '');
+    return valueStr.replace('0.', '');
 }
 
 function getCriteriaObject(flags) {

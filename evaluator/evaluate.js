@@ -272,7 +272,7 @@ function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch, globals, 
             return;
         }
         nodeScores[nodeID].num_parties++;
-        if(!nodeScores[nodeID].hasOwnProperty('yearsSeen')) nodeScores[nodeID].yearsSeen = [];
+        // if(!nodeScores[nodeID].hasOwnProperty('yearsSeen')) nodeScores[nodeID].yearsSeen = [];
 
         let evaluatedBranch = null;
         if(entity_type == 'supplier') evaluatedBranch = branch[nodeID];
@@ -283,13 +283,12 @@ function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch, globals, 
 
         // Iterate flags
         flags.map( (flag) => {
-            let yearsProcessed = 0;
             branch_years.map(year => {
-                if(nodeScores[nodeID].yearsSeen.indexOf(year) < 0) nodeScores[nodeID].yearsSeen.push(year);
                 let flagScore = getNodeFlagScore(nodeScores, flag, supplierIDs, evaluatedBranch, year, globalData, entity_type);
+                let cumulativeScore = 0;
+                let timesSeen = 0;
 
                 //Add value to party
-                nodeScores[nodeID].node_rules[flag.id] = accumulativeAverage(nodeScores[nodeID].node_rules[flag.id], nodeScores[nodeID].yearsSeen.length-1, flagScore, 1);
                 nodeScores[nodeID].years.map((yearObj) => {
                     if (yearObj.year == year) {
                         if(!yearObj.hasOwnProperty('node_rules')) yearObj.node_rules = {};
@@ -297,12 +296,22 @@ function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch, globals, 
                         // En esta condición, a la bandera se le asigna un valor para ese año cuando no ha sido vista antes,
                         // pero si ya ha sido vista solamente se le asigna un valor si el valor viejo es 1.
                         // De esta manera no es posible pasar a 1 una bandera que estaba en 0, pero sí lo contrario.
-                        if(!yearObj.node_rules.hasOwnProperty(flag.id)) yearObj.node_rules[flag.id] = flagScore;
-                        else if(yearObj.node_rules[flag.id] == 1) yearObj.node_rules[flag.id] = flagScore;
+                        if(!yearObj.node_rules.hasOwnProperty(flag.id)) {
+                            // if(nodeScores[nodeID].yearsSeen.indexOf(year) < 0) nodeScores[nodeID].yearsSeen.push(year);
+                            yearObj.node_rules[flag.id] = flagScore;
+                            // nodeScores[nodeID].node_rules[flag.id] = accumulativeAverage(nodeScores[nodeID].node_rules[flag.id], nodeScores[nodeID].yearsSeen.length-1, flagScore, 1);
+                            // console.log(nodeID, flag.id, nodeScores[nodeID].yearsSeen, year, entity_type, flagScore, nodeScores[nodeID].node_rules[flag.id]);
+                        }
+                        else if(yearObj.node_rules[flag.id] == 1 && flagScore == 0) yearObj.node_rules[flag.id] = flagScore;
+                    }
+                    if(yearObj.hasOwnProperty('node_rules') && yearObj.node_rules.hasOwnProperty(flag.id)) {
+                        cumulativeScore += yearObj.node_rules[flag.id];
+                        timesSeen++;
                     }
                 });
 
-                yearsProcessed++;
+                // Calculate new average in global node_rules object for this flag
+                nodeScores[nodeID].node_rules[flag.id] = cumulativeScore / timesSeen;
             });
         } );
     });
@@ -359,6 +368,7 @@ function getNodeFlagScore(nodeScores, flag, supplierIDs, branch, year, globalDat
 // Promediar total_scores de todos los suppliers de esta UC, y calcular confiabilidad para los suppliers en el mismo loop
 function partyGlobalReliability(branch, supplierIDs, year, partyScores, flag_field, entity) {
     let supplier_total_score = 0;
+    let seenSuppliers = 0;
 
     // Hay que revisar esta función. Calcularla por año? Calcularla toda de un solo? Si es por año, filtrar suppliers por los que tengan contratos en ese año
     supplierIDs.map( (id) => {
@@ -366,28 +376,30 @@ function partyGlobalReliability(branch, supplierIDs, year, partyScores, flag_fie
             partyScores[id].years.map(y => {
                 if(y.year == year) {
                     supplier_total_score += y.contract_score[flag_field];
+                    seenSuppliers++;
                 }
             })
         }
     } );
-
-    return supplier_total_score / supplierIDs.length;
+    
+    return supplier_total_score / seenSuppliers;
 }
 
 function limitedAccumulatorPercent(branch, year, flag) {
     let threshold = flag.limit;
-    let minimum = flag.minimum_contract_count? flag.minimum_contract_count : 0;
+    let minimum_contracts = flag.minimum_contract_count? flag.minimum_contract_count : 0;
+    let accumulator_minimum = flag.accumulator_minimum? flag.accumulator_minimum : 0;
     let contract_count = branch.years[year].c_c;
     let result = 1;
 
-    if(contract_count >= minimum) {
+    if(contract_count >= minimum_contracts) {
         flag.fields.map( field => {
             let fieldName = flag.id + '_' + field.replace(/\./g, '_');
 
             Object.keys( branch.years[year][fieldName] ).map( key => {
                 let value = branch.years[year][fieldName][key];
                 let target = (contract_count * threshold) / 100;
-                if(value >= target) result = 0;
+                if(value >= target && value >= accumulator_minimum) result = 0;
             } )
         } );
     }
@@ -414,6 +426,7 @@ function limitedPartyAccumulatorPercent(branch, year, flag, nodeScores, supplier
     let threshold = flag.limit;
     let result = 1;
     let contract_count = branch.years[year].c_c;
+    let accumulator_minimum = flag.accumulator_minimum? flag.accumulator_minimum : 0;
 
     if(entity_type == 'supplier') {
         nodeScores[branch.id].years.map( y => {
@@ -427,7 +440,9 @@ function limitedPartyAccumulatorPercent(branch, year, flag, nodeScores, supplier
             supplierIDs.map( supplier => {
                 if(branch.children[supplier].years[year]) {
                     let supplier_cc = branch.children[supplier].years[year][fieldName];
-                    if( supplier_cc > (contract_count * threshold) / 100 ) {
+                    let target = (contract_count * threshold) / 100;
+                    // console.log(branch.id, flag.id, supplier, supplier_cc, contract_count, threshold);
+                    if( supplier_cc >= target && supplier_cc >= accumulator_minimum ) {
                         // Asignar el score al supplier
                         nodeScores[supplier].years.map( y => {
                             if(y.year == year) {
@@ -441,7 +456,7 @@ function limitedPartyAccumulatorPercent(branch, year, flag, nodeScores, supplier
                     nodeScores[supplier].years.map( y => {
                         if(y.year == year) {
                             if( !y.node_rules ) y.node_rules = {};
-                            y.node_rules[flag.id] = 1;
+                            y.node_rules[flag.id] = result;
                         }
                     } );
                 }
@@ -469,7 +484,7 @@ function limitedPartySummerPercent(branch, year, flag, nodeScores, supplierIDs, 
             supplierIDs.map( supplier => {
                 if(branch.children[supplier].years[year]) {
                     let supplier_ca = branch.children[supplier].years[year][fieldName];
-                    if( supplier_ca > (contract_amount * threshold) / 100 ) {
+                    if( supplier_ca > (contract_amount * threshold) ) {
                         // Asignar el score al supplier
                         nodeScores[supplier].years.map( y => {
                             if(y.year == year) {
@@ -483,7 +498,7 @@ function limitedPartySummerPercent(branch, year, flag, nodeScores, supplierIDs, 
                     nodeScores[supplier].years.map( y => {
                         if(y.year == year) {
                             if( !y.node_rules ) y.node_rules = {};
-                            y.node_rules[flag.id] = 1;
+                            y.node_rules[flag.id] = result;
                         }
                     } );
                 }
