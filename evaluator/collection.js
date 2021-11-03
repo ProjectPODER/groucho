@@ -41,7 +41,6 @@ function updateFlagCollection(party, collection, evaluation, flags) {
         newObj.id = party.id;
         newObj.name = party.name;
         newObj.ruleset_id = evaluation.ruleset_id;
-        // newObj.name = party.name;
         newObj.type = 'party';
         newObj.entity = party.entity;
         if(party.entity == 'buyer') {
@@ -66,15 +65,14 @@ function updateFlagCollection(party, collection, evaluation, flags) {
             })
         });
         newObj.contract_count = [];
-        newObj.contract_count.push({ year: year, count: 1 });
+        newObj.contract_count.push({ year: year, count: 1, amount: evaluation.value.amount });
 
         collection[party.id] = newObj;
     }
     else {
-        if(obj.contract_count.filter( function(item) { return item.year == year } ).length == 0)
-        {
+        if(obj.contract_count.filter( function(item) { return item.year == year } ).length == 0) {
             // Contracts for this party and this year have not been seen yet
-            obj.contract_count.push({ year: year, count: 1 });
+            obj.contract_count.push({ year: year, count: 1, amount: evaluation.value.amount });
 
             // Iterate over flag categories and then flags
             Object.keys(flags).map( function(key, index) {
@@ -112,7 +110,10 @@ function updateFlagCollection(party, collection, evaluation, flags) {
 
             // Don't forget: increase contract_count after contract has been processed
             obj.contract_count.map( (item) => {
-                if(item.year == year) item.count += 1;
+                if(item.year == year) {
+                    item.count += 1;
+                    item.amount += evaluation.value.amount
+                }
                 return item;
             } );
         }
@@ -191,7 +192,9 @@ function getPartyCriteriaSummary(collection, criteriaObj) {
         let party = {
             id: item.id,
             name: item.name,
-            type: item.entity
+            type: item.entity,
+            contract_count: 0,
+            contract_amount: 0
         };
         if(party.type == 'buyer') {
             party.govLevel = item.govLevel;
@@ -201,6 +204,12 @@ function getPartyCriteriaSummary(collection, criteriaObj) {
         if(item.hasOwnProperty('parent')) {
             Object.assign( party, { parent: item.parent } )
         }
+
+        // Assign contract count and amount to flag object
+        item.contract_count.map( year => {
+            party.contract_count += year.count;
+            party.contract_amount += year.amount;
+        } );
 
         let contract_score = JSON.parse(tempCriteriaObj);
         let years = [];
