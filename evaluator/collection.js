@@ -39,6 +39,7 @@ function updateFlagCollection(party, collection, evaluation, flags) {
         let newObj = {};
 
         newObj.id = party.id;
+        newObj.name = party.name;
         newObj.ruleset_id = evaluation.ruleset_id;
         // newObj.name = party.name;
         newObj.type = 'party';
@@ -189,6 +190,7 @@ function getPartyCriteriaSummary(collection, criteriaObj) {
     collection.map( (item) => {
         let party = {
             id: item.id,
+            name: item.name,
             type: item.entity
         };
         if(party.type == 'buyer') {
