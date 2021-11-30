@@ -297,12 +297,11 @@ function evaluateNode(nodeIDs, nodeScores, flags, supplierIDs, branch, globals, 
                         // pero si ya ha sido vista solamente se le asigna un valor si el valor viejo es 1.
                         // De esta manera no es posible pasar a 1 una bandera que estaba en 0, pero sí lo contrario.
                         if(!yearObj.node_rules.hasOwnProperty(flag.id)) {
-                            // if(nodeScores[nodeID].yearsSeen.indexOf(year) < 0) nodeScores[nodeID].yearsSeen.push(year);
                             yearObj.node_rules[flag.id] = flagScore;
-                            // nodeScores[nodeID].node_rules[flag.id] = accumulativeAverage(nodeScores[nodeID].node_rules[flag.id], nodeScores[nodeID].yearsSeen.length-1, flagScore, 1);
-                            // console.log(nodeID, flag.id, nodeScores[nodeID].yearsSeen, year, entity_type, flagScore, nodeScores[nodeID].node_rules[flag.id]);
                         }
-                        else if(yearObj.node_rules[flag.id] == 1 && flagScore == 0) yearObj.node_rules[flag.id] = flagScore;
+                        else if(yearObj.node_rules[flag.id] == 1 && flagScore == 0) {
+                            yearObj.node_rules[flag.id] = flagScore;
+                        }
                     }
                     if(flag.type == 'reliability') nodeScores[nodeID].node_rules[flag.id] = accumulativeAverage(nodeScores[nodeID].node_rules[flag.id], nodeScores[nodeID].numParties, flagScore, 1);
                     else if(yearObj.hasOwnProperty('node_rules') && yearObj.node_rules.hasOwnProperty(flag.id)) {
@@ -431,9 +430,11 @@ function limitedPartyAccumulatorPercent(branch, year, flag, nodeScores, supplier
     let accumulator_minimum = flag.accumulator_minimum? flag.accumulator_minimum : 0;
 
     if(entity_type == 'supplier') {
-        nodeScores[branch.id].years.map( y => {
-            if( y.year == year) result = y.node_rules[flag.id];
-        } )
+        supplierIDs.map(buyer => {
+            nodeScores[buyer].years.map( y => {
+                if( y.year == year) result = y.node_rules[flag.id];
+            } )
+        })
         return result;
     }
     else if(entity_type == 'buyer') {
@@ -455,12 +456,6 @@ function limitedPartyAccumulatorPercent(branch, year, flag, nodeScores, supplier
                         // Ya encontramos un supplier que rompe la regla
                         result = 0;
                     }
-                    nodeScores[supplier].years.map( y => {
-                        if(y.year == year) {
-                            if( !y.node_rules ) y.node_rules = {};
-                            y.node_rules[flag.id] = result;
-                        }
-                    } );
                 }
             } );
         } );
@@ -476,9 +471,11 @@ function limitedPartySummerPercent(branch, year, flag, nodeScores, supplierIDs, 
     let contract_amount = branch.years[year].c_a;
 
     if(entity_type == 'supplier') {
-        nodeScores[branch.id].years.map( y => {
-            if( y.year == year) result = y.node_rules[flag.id];
-        } )
+        supplierIDs.map(buyer => {
+            nodeScores[buyer].years.map( y => {
+                if( y.year == year) result = y.node_rules[flag.id];
+            } )
+        })
         return result;
     }
     else if(entity_type == 'buyer') {
@@ -498,12 +495,6 @@ function limitedPartySummerPercent(branch, year, flag, nodeScores, supplierIDs, 
                         // Ya encontramos un supplier que rompe la regla
                         result = 0;
                     }
-                    nodeScores[supplier].years.map( y => {
-                        if(y.year == year) {
-                            if( !y.node_rules ) y.node_rules = {};
-                            y.node_rules[flag.id] = result;
-                        }
-                    } );
                 }
             } );
         } );
