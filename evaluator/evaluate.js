@@ -376,7 +376,7 @@ function partyGlobalReliability(branch, supplierIDs, year, partyScores, flag_fie
         if(partyScores[id]) {
             partyScores[id].years.map(y => {
                 if(y.year == year) {
-                    supplier_total_score += y.contract_score[flag_field];
+                    supplier_total_score += y.contract_categories[flag_field];
                     seenSuppliers++;
                 }
             })
@@ -781,7 +781,7 @@ function getBuyerYearScore(id, partyScores, year) {
     if(partyScores[id]) {
         partyScores[id].years.map( (b_year) => {
             if(b_year.year == year) {
-                score = b_year.contract_score.total_score;
+                score = b_year.contract_categories.total_score;
             }
         } );
     }
@@ -798,7 +798,7 @@ function getSupplierYearScores(supplierIDs, partyScores, year) {
         if(partyScores[id]) {
             partyScores[id].years.map( (s_year) => {
                 if(s_year.year == year) {
-                    total_score += s_year.contract_score.total_score;
+                    total_score += s_year.contract_categories.total_score;
                     num_suppliers++;
                     year_ids.push(id);
                 }

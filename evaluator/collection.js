@@ -237,7 +237,7 @@ function getPartyCriteriaSummary(collection, criteriaObj) {
                     if( partyFlagObj.years.filter( (yearObj) => { return yearObj.year == score.year } ).length == 0 ) {
                         let criteriaYearObj = {
                             year: score.year,
-                            contract_score: JSON.parse(tempCriteriaObj),
+                            contract_categories: JSON.parse(tempCriteriaObj),
                             contract_rules: {}
                         }
                         partyFlagObj.years.push(criteriaYearObj);
@@ -247,7 +247,7 @@ function getPartyCriteriaSummary(collection, criteriaObj) {
                     partyFlagObj.years.map( (yearObj) => {
                         if(yearObj.year == score.year) {
                             // console.log("item partyFlagObj.years",yearObj.contract_score[categoria])
-                            yearObj.contract_score[categoria] += score.score;
+                            yearObj.contract_categories[categoria] += score.score;
                             // if( !yearObj.rules_score[categoria] ) yearObj.rules_score[categoria] = {};
                             yearObj.contract_rules[bandera] = score.score;
                             scoreSum += score.score;
@@ -265,8 +265,8 @@ function getPartyCriteriaSummary(collection, criteriaObj) {
             // Calculate averages for this category and this year
             partyFlagObj.years.map( (yearObj) => {
                 // console.log("partyFlagObj.years",yearObj)
-                yearObj.contract_score[categoria] /= flagCount;
-                partyFlagObj.contract_score[categoria] += yearObj.contract_score[categoria];
+                yearObj.contract_categories[categoria] /= flagCount;
+                partyFlagObj.contract_score[categoria] += yearObj.contract_categories[categoria];
             } );
 
             // console.log("getPartyCriteriaSummary",partyFlagObj.contract_score,categoria,partyFlagObj.contract_score[categoria],partyFlagObj.years.length)
@@ -277,13 +277,13 @@ function getPartyCriteriaSummary(collection, criteriaObj) {
         partyFlagObj.years.map( (yearObj) => {
             var year_total = 0;
             var num_categorias = 0;
-            Object.keys(yearObj.contract_score).map( function(cat, index) {
+            Object.keys(yearObj.contract_categories).map( function(cat, index) {
                 if(cat != 'total_score') {
-                    year_total += yearObj.contract_score[cat];
+                    year_total += yearObj.contract_categories[cat];
                     num_categorias++;
                 }
             } );
-            yearObj.contract_score.total_score = year_total / num_categorias;
+            yearObj.contract_categories.total_score = year_total / num_categorias;
         } )
 
         // Calculate contract total_score
@@ -340,20 +340,47 @@ function getPartyNodeSummary(collection, nodeScores) {
 
             //TODO: Review years here
             // Assign each node_score object to each evaluated year
+            let item_years_count = 0;
+            let item_years_node_rules = 0;
             item.years.map( (year) => {
                 // console.log("getPartyNodeSummary",year);
-                if(node_score.years[year.year]) {
-                    let year_node_scores_sum = 0;
-                    let year_node_scores_count = 0;
-                    Object.keys(node_score.years[year.year].node_rules).map( (x) => {
-                        year_node_scores_sum += node_score.years[year.year].node_rules[x];
-                        year_node_scores_count++;
-                    } );
-                    let year_node_total_score = year_node_scores_sum / year_node_scores_count;
-                    Object.assign( node_score.years[year.year].node_rules, { 'total_score': year_node_total_score } );
-                    Object.assign( year, { 'node_rules': node_score.years[year.year].node_rules } );
-                }
+                node_score.years.map( node_year => {
+                    if(node_year.year == year.year && node_year.node_rules) {
+                        let year_node_scores_sum = 0;
+                        let year_node_scores_count = 0;
+                        Object.keys(node_year.node_rules).map( (x) => {
+                            year_node_scores_sum += node_year.node_rules[x];
+                            year_node_scores_count++;
+                        } );
+                        let year_node_total_score = year_node_scores_sum / year_node_scores_count;
+                        Object.assign( node_year.node_rules, { 'total_score': year_node_total_score } );
+                        Object.assign( year, { 'node_rules': node_year.node_rules } );
+                        item_years_count++;
+                        item_years_node_rules += year_node_total_score;
+
+                        let year_category_acc = {};
+                        if(!year.node_categories) year.node_categories = {}
+                        for (let rule_index in Object.keys(node_year.node_rules)) {
+                            let rule = Object.keys(node_year.node_rules)[rule_index];
+                            let category = rule.split("-")[0];
+                            if (!year_category_acc[category]) {
+                                year_category_acc[category]={
+                                    value: 0,
+                                    count: 0
+                                }
+                            }
+                            year_category_acc[category].value += node_year.node_rules[rule];
+                            year_category_acc[category].count++;
+                        }
+                        for (category_index in Object.keys(year_category_acc)) {
+                            let category = Object.keys(year_category_acc)[category_index];
+                            year.node_categories[category] = year_category_acc[category].value / year_category_acc[category].count;
+                        }
+
+                    }
+                } );
             } );
+            item.node_rules.total_score = item_years_node_rules / item_years_count;
         }
         else {
             console.log('Node score not found:', item.party.id);

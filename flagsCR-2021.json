@@ -612,21 +612,6 @@
             "type": "check-field-value-bool"
         },
         {
-            "id": "traz-ir6",
-            "category": "Trazabilidad",
-            "name": "Importe Redondeado",
-            "fields": [
-                {
-                    "value":"contracts.value.amount",
-                    "operation": {
-                        "substr":[-6]
-                    }
-                }
-            ],
-            "values":["000000"],
-            "type": "check-field-value-bool"
-        },
-        {
             "id": "traz-ct",
             "category": "Trazabilidad",
             "name": "Comprensión del Título",
@@ -661,7 +646,7 @@
             "id": "comp-aepm",
             "category": "Competitividad",
             "name": "AGENTE ECONOMICO PREPONDERANTE (MONTO)",
-            "limit": [0.2, 0.3, 0.5],
+            "limit": [0.3],
             "type": "limited-party-summer-percent",
             "fields": ["contracts.value.amount"]
         },
@@ -669,7 +654,7 @@
             "id": "comp-aepc",
             "category": "Competitividad",
             "name": "AGENTE ECONOMICO PREPONDERANTE (CANTIDAD)",
-            "limit": [0.2, 0.3, 0.5],
+            "limit": [0.3],
             "accumulator_minimum": 2,
             "type": "limited-party-accumulator-percent",
             "fields": ["id"]
@@ -678,7 +663,7 @@
             "id": "traz-trc",
             "category": "Trazabilidad",
             "name": "TITULO DE CONTRATO REPETIDO",
-            "limit": [5,10,15],
+            "limit": [10],
             "minimum_contract_count": 1,
             "accumulator_minimum": 3,
             "type": "limited-accumulator-percent",
@@ -688,7 +673,7 @@
             "id": "traz-mcr",
             "category": "Trazabilidad",
             "name": "MONTO DE CONTRATO REPETIDO",
-            "limit": [5,10,15],
+            "limit": [5],
             "minimum_contract_count": 1,
             "accumulator_minimum": 3,
             "type": "limited-accumulator-percent",
@@ -707,7 +692,7 @@
             "id": "comp-ncap",
             "category": "Competitividad",
             "name": "NUMERO DE CONTRATOS ARRIBA DEL PROMEDIO",
-            "limit": [3,5,10],
+            "limit": [3],
             "minimum_contract_count": 1,
             "accumulator_minimum": 2,
             "fields": ["contracts.period.startDate"],
