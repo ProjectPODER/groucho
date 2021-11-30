@@ -425,6 +425,7 @@ function limitedPartyAccumulatorCount(branch, year, flag, globalData) {
 
 function limitedPartyAccumulatorPercent(branch, year, flag, nodeScores, supplierIDs, entity_type) {
     let threshold = flag.limit;
+    if(threshold > 1) threshold = flag.limit / 100;
     let result = 1;
     let contract_count = branch.years[year].c_c;
     let accumulator_minimum = flag.accumulator_minimum? flag.accumulator_minimum : 0;
@@ -440,9 +441,9 @@ function limitedPartyAccumulatorPercent(branch, year, flag, nodeScores, supplier
             let fieldName = flag.id + '_' + f.replace(/\./g, '_');
             supplierIDs.map( supplier => {
                 if(branch.children[supplier].years[year]) {
-                    let supplier_cc = branch.children[supplier].years[year][fieldName];
-                    let target = (contract_count * threshold) / 100;
-                    // console.log(branch.id, flag.id, supplier, supplier_cc, contract_count, threshold);
+                    let supplier_cc = branch.children[supplier].years[year].c_c;
+                    let target = contract_count * threshold;
+                    // console.log(year, branch.id, flag.id, fieldName, supplier, supplier_cc, contract_count, threshold);
                     if( supplier_cc >= target && supplier_cc >= accumulator_minimum ) {
                         // Asignar el score al supplier
                         nodeScores[supplier].years.map( y => {
@@ -470,6 +471,7 @@ function limitedPartyAccumulatorPercent(branch, year, flag, nodeScores, supplier
 
 function limitedPartySummerPercent(branch, year, flag, nodeScores, supplierIDs, entity_type) {
     let threshold = flag.limit;
+    if(threshold > 1) threshold = flag.limit / 100;
     let result = 1;
     let contract_amount = branch.years[year].c_a;
 

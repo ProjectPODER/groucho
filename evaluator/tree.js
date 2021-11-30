@@ -247,7 +247,7 @@ function branchExists(roots, branch_id) {
 }
 
 function leafExists(branch, leaf_id) {
-    if( branch[leaf_id] ) return true;
+    if( branch.children[leaf_id] ) return true;
     else return false;
 }
 
