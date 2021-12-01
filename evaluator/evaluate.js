@@ -430,11 +430,11 @@ function limitedPartyAccumulatorPercent(branch, year, flag, nodeScores, supplier
     let accumulator_minimum = flag.accumulator_minimum? flag.accumulator_minimum : 0;
 
     if(entity_type == 'supplier') {
-        supplierIDs.map(buyer => {
-            nodeScores[buyer].years.map( y => {
-                if( y.year == year) result = y.node_rules[flag.id];
-            } )
-        })
+        // supplierIDs.map(buyer => {
+        //     nodeScores[buyer].years.map( y => {
+        //         if( y.year == year) result = y.node_rules[flag.id];
+        //     } )
+        // });
         return result;
     }
     else if(entity_type == 'buyer') {
@@ -471,11 +471,11 @@ function limitedPartySummerPercent(branch, year, flag, nodeScores, supplierIDs, 
     let contract_amount = branch.years[year].c_a;
 
     if(entity_type == 'supplier') {
-        supplierIDs.map(buyer => {
-            nodeScores[buyer].years.map( y => {
-                if( y.year == year) result = y.node_rules[flag.id];
-            } )
-        })
+        // supplierIDs.map(buyer => {
+        //     nodeScores[buyer].years.map( y => {
+        //         if( y.year == year) result = y.node_rules[flag.id];
+        //     } )
+        // })
         return result;
     }
     else if(entity_type == 'buyer') {
