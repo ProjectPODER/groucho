@@ -10,8 +10,8 @@
     "type": "git",
     "url": "ssh://git@gitlab.rindecuentas.org:2203/equipo-qqw/groucho.git"
   },
-  "author": "PODER",
-  "license": "ISC",
+  "author": "Fernando Matzdorf",
+  "license": "GPL-3.0-or-later",
   "dependencies": {
     "@elastic/elasticsearch": "^7.14.0",
     "JSONStream": "^1.3.5",
